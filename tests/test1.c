@@ -53,8 +53,7 @@ int main (int argc, char **argv)
       default:
         abort ();
       }
-// printf("Need Help?\nAvailable options:\n1. -i option for the input file\n2. -o option for the output file.\n3. -c option denotes copy, where the input file is 
-//copied to the output file without change\n4. -w option not avaiable right now,but for future use\n5. v option means verify for input file\n");
+
 if(B1.oflag==0) //optional
 {
    B1.ovalue=B1.ivalue;
