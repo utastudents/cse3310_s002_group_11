@@ -2,7 +2,13 @@ extfat utils is a utility to manipulate extfat images.
 
 # Command Options:
 < Keep this up to date >
-
+Allowed options:
+1. '-i' option for the input file
+2. '-o' option for the output file.
+3. '-c' option denotes copy, where the input file is copied to the output file without change
+4. '-w' option not avaiable right now,but for future use
+5. '-v' option means verify for input file
+6. '-h' help text
 # Example Invocations:
 < Provide examples of use here >
 

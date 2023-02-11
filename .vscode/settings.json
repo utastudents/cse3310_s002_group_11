@@ -15,5 +15,6 @@
             "binaryPath": "/workspaces/cse_3310_exFAT/extfat",
             "binaryArgs": []
         }
-    ]
+    ],
+    "C_Cpp.errorSquiggles": "disabled"
 }

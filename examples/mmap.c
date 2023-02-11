@@ -91,8 +91,8 @@ int main()
    printf("SectorsPerClusterShift %d\n",MB->SectorsPerClusterShift);
    printf("NumberOfFats %d\n",MB->NumberOfFats);
 
-   int bytesPerSector = 2  << MB->BytesPerSectorShift;
-   int sectorsPerCluster = 2 << MB->SectorsPerClusterShift;
+   int bytesPerSector = 2  << (MB->BytesPerSectorShift-1);
+   int sectorsPerCluster = 2 << (MB->SectorsPerClusterShift-1);
 
    printf("-----> the bytesPerSector are %d\n",bytesPerSector);
    printf("-----> the sectorsPerCluster are %d\n",sectorsPerCluster);
