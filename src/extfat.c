@@ -9,16 +9,11 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-char * help[] = {
-    "This is help line 1.",
-    "This is help line 2.",
-    "This is help line 3.",
-    "This is help line 4.",
-    "This is help line 5.",
-    "This is help line 6.",
-    NULL
-};
+// Insert constants here
 
+// Insert more structures here
+
+// Main memory structure
 struct instance
 {
     bool iflag;
@@ -30,12 +25,54 @@ struct instance
     char * ovalue;
     struct stat infile;
     struct stat outfile;
-    void * mem;
+    void * memInput;
+    void * memOutput;
     char * function;
+    void * bootSectorMain;
+    void * bootSectorBackup;
 };
+
+// Function Declarations
+int mapFile (struct instance *);
+int readFile (struct instance *);
+int writeFile (struct instance *);
+int compareBootSec (struct instance *);
+
+// Map the files from the main memory structure
+int mapFile (struct instance * inst)
+{
+    return EXIT_SUCCESS;
+}
+
+// Read the file from the main memory structure, input only
+int readFile (struct instance * inst)
+{
+    return EXIT_SUCCESS;
+}
+
+// Write the file from the main memory structure, output only
+int writeFile (struct instance * inst)
+{
+    return EXIT_SUCCESS;
+}
+
+// Compare the boot sectors from the main memory structure
+int compareBootSec (struct instance * inst)
+{
+    return EXIT_SUCCESS;
+}
 
 int main(int argc, char ** argv)
 {
+char * help[] = {
+    "This is help line 1.",
+    "This is help line 2.",
+    "This is help line 3.",
+    "This is help line 4.",
+    "This is help line 5.",
+    "This is help line 6.",
+    NULL
+};    
     struct instance inst;
     inst.iflag = false;
     inst.oflag = false;
@@ -46,8 +83,8 @@ int main(int argc, char ** argv)
     inst.ovalue = NULL;
     bzero (&inst.infile, sizeof (struct stat));
     bzero (&inst.outfile, sizeof (struct stat));
-    inst.mem = NULL;
-    inst.function = "main";
+    inst.memInput = NULL;
+    inst.function = __func__;
     while ((inst.opt = getopt (argc, argv, "i:co:h")) != -1)
     {
         switch (inst.opt)
