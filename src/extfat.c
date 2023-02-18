@@ -11,6 +11,7 @@
 
 // Insert constants here
 
+// Use portable declarations because byte size matters
 struct bootSector
 {
     __u_char jumpBoot[3];
@@ -68,9 +69,15 @@ int readBootSector (struct instance *);
 int compareBootSec (struct instance *);
 
 // Macro Declarations
+#define isZero(x) (x == 0)
+#define isNull(x) (x == NULL)
+#define isTrue(x) (x == true)
+#define isFalse(x) (x == false)
+#define isFault(x) (x == -1)
 #define setFunction(x) x->function=__func__
 #define compareMemory(v, w, x, y, z) { if (memcmp (v->x, w->x, y) != 0) {OK = false; printf ("%s: Field %s is inconsistant", inst->function, z); }}
 #define compareValues(w, x, y, z) { if (w->y != x->y) {OK = false; printf ("%s: Field %s is inconsistant", inst->function, z); }}
+#define limitCheck(x,y,z) ((x >= y) && (x <= z))
 
 // Map the files from the main memory structure
 int mapFile (struct instance * inst)
@@ -129,13 +136,31 @@ int readBootSector (struct instance * inst)
         free (inst->bootSectorMain);
         return EXIT_FAILURE;
     }
-    if ((val = read (inst->fdInput, inst->bootSectorMain, 512)) !=  512)
+    if (read (inst->fdInput, inst->bootSectorMain, 512) !=  512)
     {
         closeExfat (inst);
         setFunction (inst);
         return EXIT_FAILURE;
     }
-    if (inst->bootSectorMain->bytesPerSectorShift)
+    if (!limitCheck(inst->bootSectorMain->bytesPerSectorShift, 5, 9))
+    {
+        closeExfat (inst);
+        setFunction (inst);
+        return EXIT_FAILURE;
+    }
+    val = (2 << inst->bootSectorMain->bytesPerSectorShift) * 11;
+    if (lseek (inst->fdInput, val, SEEK_SET) != val)
+    {
+        closeExfat (inst);
+        setFunction (inst);
+        return EXIT_FAILURE;
+    }
+    if (read (inst->fdInput, inst->bootSectorBackup, 512) !=  512)
+    {
+        closeExfat (inst);
+        setFunction (inst);
+        return EXIT_FAILURE;
+    }
     if ((val = compareBootSec (inst)) == EXIT_FAILURE)
     {
         setFunction (inst);
