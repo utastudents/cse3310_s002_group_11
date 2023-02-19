@@ -88,9 +88,9 @@ int mapFile (struct instance * inst)
 {
     int val = 0;
     if (isNull(inst)) return EXIT_FAILURE;
-    inst->fdInput = open(inst->ivalue, O_RDONLY);
+    inst->fdInput = open(inst->ivalue, O_RDWR);
     fstat (inst->fdInput, &(inst->inFile));
-    inst->memInput = mmap (NULL, inst->inFile.st_size, PROT_READ, MAP_SHARED, inst->fdInput, 0);
+    inst->memInput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdInput, 0);
     if (inst->memInput == MAP_FAILED)
     {
         printf ("%s: Cannot map input file to memory\n", inst->function);
@@ -101,8 +101,14 @@ int mapFile (struct instance * inst)
     inst->bootSectorBackup = ((void *)(inst->memInput) + val);
     if (compareBootSec (inst) == EXIT_FAILURE)
     {
+        msync (inst->memInput, inst->inFile.st_size, MS_SYNC);
         munmap (inst->memInput, inst->inFile.st_size);
         return EXIT_FAILURE;
+    }
+    if (isZero (strcmp (inst->ivalue, inst->ovalue)))
+    {
+        inst->memOutput = inst->memInput;
+        return EXIT_SUCCESS;
     }
     inst->fdOutput = open(inst->ovalue, O_WRONLY);
     inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);
@@ -111,6 +117,19 @@ int mapFile (struct instance * inst)
         printf ("%s: Cannot map output file to memory\n", inst->function);
         return EXIT_FAILURE;
     }
+    return EXIT_SUCCESS;
+}
+
+// Unmap the files from the main memory structure
+int unmapFile (struct instance * inst)
+{
+    setFunction (inst);
+    msync (inst->memInput, inst->inFile.st_size, MS_SYNC);
+    munmap (inst->memInput, inst->inFile.st_size);
+    close (inst->fdInput);
+    msync (inst->memOutput, inst->outFile.st_size, MS_SYNC);
+    munmap (inst->memInput, inst->inFile.st_size);
+    close (inst->fdOutput);
     return EXIT_SUCCESS;
 }
 
@@ -295,11 +314,14 @@ int main(int argc, char ** argv)
     }
     if (isFalse(exfat.iflag)) exfat.ivalue = "test.image";
     if (isFalse(exfat.oflag)) exfat.ovalue = exfat.ivalue;
-    if (openExfat(&exfat) == EXIT_FAILURE)
+//    if (openExfat(&exfat) == EXIT_FAILURE)
+    if (mapFile (&exfat) == EXIT_FAILURE)
     {
-        closeExfat(&exfat);
+//        closeExfat(&exfat);
+        unmapFile (&exfat);
         return EXIT_FAILURE;
     }
-    closeExfat(&exfat);
+//    closeExfat(&exfat);
+    unmapFile (&exfat);
     return EXIT_SUCCESS;
 }
