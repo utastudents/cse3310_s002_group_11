@@ -1,7 +1,5 @@
-// Task 3 and Task 4 Assignment
-// Partial implementation of Task 1 and Task 2 required to allow it too work
-// Partial Implementation of mmap, currently using file read
 #include <ctype.h>
+#include <extfat.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdbool.h>
@@ -12,65 +10,6 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-
-// Insert constants here
-
-// Use portable declarations because byte size matters
-struct bootSector
-{
-    __u_char jumpBoot[3];
-    __u_char fileSystemName[8];
-    __u_char mustBeZero[53];
-    __uint64_t partitionOffset;
-    __uint64_t volumeLength;
-    __uint32_t fatOffset;
-    __uint32_t fatLength;
-    __uint32_t clusterHeapOffset;
-    __uint32_t clusterCount;
-    __uint32_t firstClusterOfRootDirectory;
-    __uint32_t volumeSerialNumber;
-    __uint16_t fileSystemRevision;
-    __uint16_t volumeFlags;
-    __uint8_t bytesPerSectorShift;
-    __uint8_t sectorsPerClusterShift;
-    __uint8_t numberOfFats;
-    __uint8_t driveSelect;
-    __uint8_t percentInUse;
-    __uint8_t reserved;
-    __u_char bootCode[390];
-    __u_char bootSignature;
-};
-
-// Insert more structures here
-
-// Main memory structure
-struct instance
-{
-    bool iflag;
-    bool oflag;
-    bool cflag;
-    int fdInput;
-    int fdOutput;
-    int opt;
-    char * ivalue;
-    char * ovalue;
-    struct stat inFile;
-    struct stat outFile;
-    void * memInput;
-    void * memOutput;
-    const char * function;
-    struct bootSector * bootSectorMain; // Sector 0
-    struct bootSector * bootSectorBackup; // Sector 12
-};
-
-// Function Declarations
-int mapFile (struct instance *);
-int readFile (struct instance *);
-int writeFile (struct instance *);
-int openExfat (struct instance *);
-void closeExfat (struct instance *);
-int readBootSector (struct instance *);
-int compareBootSec (struct instance *);
 
 // Macro Declarations
 #define isZero(x) (x == 0)
@@ -263,6 +202,9 @@ int main(int argc, char ** argv)
         "           -i xxx    where xxx is the input file name [This is optional, but -i test.image is implied if not specified]",
         "           -o xxx    where xxx is the output file number [This is optional, inputFile will be used if not specified]",
         "           -c        triggers the copying of input to output (This is optional)",
+        "           -m        use mmap for file access. [implied if -f and -m not specified]", // Added from rency
+        "           -f        use fread for file access", // Addded from rency
+        "           -v        verify exfat image", // Added from rency
         "           -h        is this help message",
         NULL
     };    
@@ -272,6 +214,9 @@ int main(int argc, char ** argv)
     exfat.iflag = false;
     exfat.oflag = false;
     exfat.cflag = false;
+    exfat.vflag = false;
+    exfat.fflag = false;
+    exfat.mflag = false;
     exfat.fdInput = -1;
     exfat.fdOutput = -1;
     exfat.opt = -1;
@@ -299,6 +244,15 @@ int main(int argc, char ** argv)
                 if (optopt == 'i' || optopt == 'o')
                 fprintf (stderr, "Option requires an argument.\n");
                 return EXIT_FAILURE;
+            case 'm': // Added from rency
+                exfat.mflag = true;
+                break;
+            case 'f': // Added from rency
+                exfat.fflag = true;
+                break;
+            case 'v': // Added from rency
+                exfat.vflag = true;
+                break;
             case 'h':
                 while (help[i] != NULL)
                 {
@@ -314,14 +268,12 @@ int main(int argc, char ** argv)
     }
     if (isFalse(exfat.iflag)) exfat.ivalue = "test.image";
     if (isFalse(exfat.oflag)) exfat.ovalue = exfat.ivalue;
-//    if (openExfat(&exfat) == EXIT_FAILURE)
+    if (isFalse(exfat.fflag) && isFalse(exfat.mflag)) exfat.mflag = true;
     if (mapFile (&exfat) == EXIT_FAILURE)
     {
-//        closeExfat(&exfat);
         unmapFile (&exfat);
         return EXIT_FAILURE;
     }
-//    closeExfat(&exfat);
     unmapFile (&exfat);
     return EXIT_SUCCESS;
 }
