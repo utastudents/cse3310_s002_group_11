@@ -101,9 +101,6 @@ struct instance
 // Function Declarations
 // Moved from extfat.c
 int mapFile (struct instance *);
-int readFile (struct instance *);
-int writeFile (struct instance *);
-int openExfat (struct instance *);
-void closeExfat (struct instance *);
-int readBootSector (struct instance *);
+int unmapFile (struct instance *);
+int mmapCopy (struct instance *);
 int compareBootSec (struct instance *);

@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <errno.h>
 #include <extfat.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -49,12 +50,18 @@ int mapFile (struct instance * inst)
 {
     int val = 0;
     if (isNull(inst)) return EXIT_FAILURE;
+    setFunction(inst);
     inst->fdInput = open(inst->ivalue, O_RDWR);
+    if (isFault(inst->fdInput))
+    {
+        fprintf (stderr, "%s: Unable to open input file [%s] - %s", inst->function, inst->ivalue, strerror(errno));
+        return EXIT_FAILURE;
+    }
     fstat (inst->fdInput, &(inst->inFile));
     inst->memInput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdInput, 0);
     if (inst->memInput == MAP_FAILED)
     {
-        printf ("%s: Cannot map input file to memory\n", inst->function);
+        printf ("%s: Cannot map input file to memory - %s\n", inst->function, strerror(errno));
         return EXIT_FAILURE;
     }
     inst->bootSectorMain = inst->memInput;
@@ -66,18 +73,7 @@ int mapFile (struct instance * inst)
         munmap (inst->memInput, inst->inFile.st_size);
         return EXIT_FAILURE;
     }
-    if (isZero (strcmp (inst->ivalue, inst->ovalue)))
-    {
-        inst->memOutput = inst->memInput;
-        return EXIT_SUCCESS;
-    }
-    inst->fdOutput = open(inst->ovalue, O_WRONLY);
-    inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);
-    if (inst->memOutput == MAP_FAILED)
-    {
-        printf ("%s: Cannot map output file to memory\n", inst->function);
-        return EXIT_FAILURE;
-    }
+    setFunction(inst);
     if (!limitCheck(inst->bootSectorMain->bytesPerSectorShift, 5, 9))
     {
         fprintf (stderr, "%s: Illegal value of %d for BytesPerSectorShift\n", inst->function, inst->bootSectorMain->bytesPerSectorShift);
@@ -138,6 +134,36 @@ int mapFile (struct instance * inst)
         fprintf (stderr, "%s: PercentInUse field is invalid [%d]", inst->function, inst->bootSectorMain->percentInUse);
         return EXIT_FAILURE;
     }
+    // Don't process output file unless we are copying
+    if (inst->cflag != 1) return EXIT_SUCCESS;
+    if (isNULL(inst->ovalue))
+    {
+        fprintf (stderr, "%s - Specified a copy without an output file\n", inst->function);
+        return EXIT_FAILURE;
+    }
+    if (isZero (strcmp (inst->ivalue, inst->ovalue)))
+    {
+        inst->memOutput = inst->memInput;
+        return EXIT_SUCCESS;
+    }
+    if (stat (inst->ovalue, &(inst->outFile))) // Modified from Phu
+    {
+        remove (inst->ovalue);
+    }
+    inst->fdOutput = open(inst->ovalue, O_WRONLY); // Merged from Phu
+    if (isFault(inst->fdOutput))
+    {
+        fprintf (stderr, "%s: Unable to open output file [%s] - %s", inst->function, inst->ovalue, strerror(errno));
+        return EXIT_FAILURE;
+    }
+    ftruncate (inst->fdInput, inst->inFile.st_size); // Modified from Phu
+
+    inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);
+    if (inst->memOutput == MAP_FAILED)
+    {
+        printf ("%s: Cannot map output file to memory - %s\n", inst->function, strerror(errno));
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 
@@ -154,96 +180,19 @@ int unmapFile (struct instance * inst)
     return EXIT_SUCCESS;
 }
 
-// Read the file from the main memory structure, input only
-int readFile (struct instance * inst)
+// Use mmap to copy data from input to output files
+int mmapCopy (struct instance * inst)
 {
     if (isNull(inst)) return EXIT_FAILURE;
-    return EXIT_SUCCESS;
-}
-
-// Write the file from the main memory structure, output only
-int writeFile (struct instance * inst)
-{
-    if (isNull(inst)) return EXIT_FAILURE;
-    return EXIT_SUCCESS;
-}
-
-// Open Files
-int openExfat (struct instance * inst)
-{
-    setFunction (inst);
-    inst->fdInput = open(inst->ivalue, O_RDONLY);
-    inst->fdOutput = open(inst->ovalue, O_WRONLY);
-    if (readBootSector (inst) == EXIT_FAILURE)
+    setFunction(inst);
+    if (isZero(strcmp (inst->ivalue, inst->ovalue)))
     {
+        fprintf (stderr, "%s: Can not copy input file [%s] to itself\n", inst->function, inst->ivalue);
         return EXIT_FAILURE;
     }
-    setFunction (inst);
-    return EXIT_SUCCESS;
-}
-
-// Close Files
-void closeExfat (struct instance * inst)
-{
-    setFunction (inst);
-    free (inst->bootSectorMain);
-    free (inst->bootSectorBackup);
-    close (inst->fdInput);
-    close (inst->fdOutput);
-}
-
-// Initial Boot Sector Read (First 512 bytes)
-// Need to transition to fread
-// Need to fix various small errors
-int readBootSector (struct instance * inst)
-{
-    int val = 0;
-    setFunction (inst);
-    inst->bootSectorMain = calloc (1, sizeof (struct bootSector));
-    if (isNull(inst->bootSectorMain))
-    {
-        return EXIT_FAILURE;
-    }
-    inst->bootSectorBackup = calloc (1, sizeof (struct bootSector));
-    if (isNull(inst->bootSectorBackup))
-    {
-        free (inst->bootSectorMain);
-        return EXIT_FAILURE;
-    }
-    if (read (inst->fdInput, inst->bootSectorMain, 512) !=  512)
-    {
-        closeExfat (inst);
-        setFunction (inst);
-        printf ("%s: Cannot read %d bytes at offset %d\n ", inst->function, 512, 0);
-        return EXIT_FAILURE;
-    }
-    if (!limitCheck(inst->bootSectorMain->bytesPerSectorShift, 5, 9))
-    {
-        closeExfat (inst);
-        setFunction (inst);
-        printf ("%s: Illegal value of %d for BytesPerSectorShift\n", inst->function, inst->bootSectorMain->bytesPerSectorShift);
-        return EXIT_FAILURE;
-    }
-    val = (1 << inst->bootSectorMain->bytesPerSectorShift) * 12;
-    if (lseek (inst->fdInput, val, SEEK_SET) != val)
-    {
-        closeExfat (inst);
-        setFunction (inst);
-        printf ("%s: Cannot seek to byte offset %d\n ", inst->function, val);
-        return EXIT_FAILURE;
-    }
-    if (read (inst->fdInput, inst->bootSectorBackup, 512) !=  512)
-    {
-        closeExfat (inst);
-        setFunction (inst);
-        printf ("%s: Cannot read %d bytes at offset %d\n ", inst->function, 512, val);
-        return EXIT_FAILURE;
-    }
-    if ((val = compareBootSec (inst)) == EXIT_FAILURE)
-    {
-        setFunction (inst);
-        return EXIT_FAILURE;
-    }
+    // memcpy has no fault condition, but will throw a segfault if out of bounds
+    // Trap SIGSEGV to more gracefully handle this
+    memcpy (inst->memOutput, inst->memInput, inst->inFile.st_size); // Merged from Phu
     return EXIT_SUCCESS;
 }
 
