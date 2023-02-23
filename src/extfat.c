@@ -11,6 +11,9 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+
+extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a glibc function with a manpage
 
 // Macro Declarations
 #define isZero(x) (x == 0) // Boolean test for being 0
@@ -28,7 +31,6 @@
 //    {
 //        OK = false;
 //        printf ("%s: Field %s is inconsistant and too messy to verbose print\n", inst->function, z);
-//        OK = u;
 //    }
 // }
 #define compareMemory(u, v, w, x, y, z) { if (memcmp (&(v->x), &(w->x), y) != 0) {OK = false; printf ("%s: Field %s is inconsistant and too messy to verbose print\n", inst->function, z); OK = u; }}
@@ -91,52 +93,52 @@ int mapFile (struct instance * inst)
     {
         if (isNEQ(inst->bootSectorMain->mustBeZero[i], 0))
         {
-            fprintf (stderr, "%s: MustBeZero value is not zero at offset %d", inst->function, i);
-            return EXIT_FAILURE;
+            fprintf (stderr, "%s: MustBeZero value [0x%02X] is not zero at offset %d\n", inst->function, inst->bootSectorMain->mustBeZero[i], i);
+//            return EXIT_FAILURE;
         }
     }
     if (inst->bootSectorMain->volumeLength < (__uint64_t)(1 << (20 - inst->bootSectorMain->bytesPerSectorShift)))
     {
-        fprintf (stderr, "%s: VolumeLength field is too small [%ld]", inst->function, inst->bootSectorMain->volumeLength);
+        fprintf (stderr, "%s: VolumeLength field is too small [%ld]\n", inst->function, inst->bootSectorMain->volumeLength);
         return EXIT_FAILURE;
     }
     if (!limitCheck(inst->bootSectorMain->fatOffset, 24, \
         inst->bootSectorMain->clusterHeapOffset - (inst->bootSectorMain->fatLength * inst->bootSectorMain->numberOfFats)))
     {
-        fprintf (stderr, "%s: FatOffset field is invalid [%d]", inst->function, inst->bootSectorMain->fatOffset);
+        fprintf (stderr, "%s: FatOffset field is invalid [%d]\n", inst->function, inst->bootSectorMain->fatOffset);
         return EXIT_FAILURE;
     }
     if (!limitCheck(inst->bootSectorMain->fatLength, \
-        (inst->bootSectorMain->clusterCount + 2) * (1 << (inst->bootSectorMain->bytesPerSectorShift - 2)), \
+        (inst->bootSectorMain->clusterCount + 2) / (1 << (inst->bootSectorMain->bytesPerSectorShift - 2)), \
         (inst->bootSectorMain->clusterHeapOffset - inst->bootSectorMain->fatOffset) / inst->bootSectorMain->numberOfFats))
     {
-        fprintf (stderr, "%s: FatLength field is invalid [%d]", inst->function, inst->bootSectorMain->fatLength);
+        fprintf (stderr, "%s: FatLength field is invalid [%d]\n", inst->function, inst->bootSectorMain->fatLength);
         return EXIT_FAILURE;
     }
     if (!limitCheck(inst->bootSectorMain->clusterHeapOffset, \
         inst->bootSectorMain->fatOffset + inst->bootSectorMain->fatLength * inst->bootSectorMain->numberOfFats, (__uint32_t)(-1)))
     {
-        fprintf (stderr, "%s: ClusterHeapOffset field is invalid [%d]", inst->function, inst->bootSectorMain->clusterHeapOffset);
+        fprintf (stderr, "%s: ClusterHeapOffset field is invalid [%d]\n", inst->function, inst->bootSectorMain->clusterHeapOffset);
         return EXIT_FAILURE;
     }
     if (!limitCheck(inst->bootSectorMain->clusterCount, inst->bootSectorMain->fatOffset + inst->bootSectorMain->fatLength * inst->bootSectorMain->numberOfFats, (__uint32_t)(-1) - 11))
     {
-        fprintf (stderr, "%s: ClusterCount field is invalid [%d]", inst->function, inst->bootSectorMain->clusterCount);
+        fprintf (stderr, "%s: ClusterCount field is invalid [%d]\n", inst->function, inst->bootSectorMain->clusterCount);
         return EXIT_FAILURE;
     }
     if (!limitCheck(inst->bootSectorMain->firstClusterOfRootDirectory, 2, inst->bootSectorMain->clusterCount + 1))
     {
-        fprintf (stderr, "%s: FirstClusterofRootDirectory field is invalid [%d]", inst->function, inst->bootSectorMain->firstClusterOfRootDirectory);
+        fprintf (stderr, "%s: FirstClusterofRootDirectory field is invalid [%d]\n", inst->function, inst->bootSectorMain->firstClusterOfRootDirectory);
         return EXIT_FAILURE;
     }
-    if (!limitCheck(inst->bootSectorMain->percentInUse, 0, 100) || 0xFF)
+    if (!limitCheck(inst->bootSectorMain->percentInUse, 0, 100) && inst->bootSectorMain->percentInUse != 0xFF)
     {
         fprintf (stderr, "%s: PercentInUse field is invalid [%d]", inst->function, inst->bootSectorMain->percentInUse);
         return EXIT_FAILURE;
     }
     // Don't process output file unless we are copying
     if (inst->cflag != 1) return EXIT_SUCCESS;
-    if (isNULL(inst->ovalue))
+    if (isNull(inst->ovalue))
     {
         fprintf (stderr, "%s - Specified a copy without an output file\n", inst->function);
         return EXIT_FAILURE;
@@ -146,17 +148,19 @@ int mapFile (struct instance * inst)
         inst->memOutput = inst->memInput;
         return EXIT_SUCCESS;
     }
-    if (stat (inst->ovalue, &(inst->outFile))) // Modified from Phu
+    if (isZero(stat (inst->ovalue, &(inst->outFile)))) // Modified from Phu
     {
+        fprintf (stderr, "%s: Removing output file [%s] before copy\n", inst->function, inst->ovalue);
         remove (inst->ovalue);
     }
-    inst->fdOutput = open(inst->ovalue, O_WRONLY); // Merged from Phu
+    inst->fdOutput = open(inst->ovalue, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); // Merged from Phu
     if (isFault(inst->fdOutput))
     {
-        fprintf (stderr, "%s: Unable to open output file [%s] - %s", inst->function, inst->ovalue, strerror(errno));
+        fprintf (stderr, "%s: Unable to open output file [%s] - %s\n", inst->function, inst->ovalue, strerror(errno));
         return EXIT_FAILURE;
     }
-    ftruncate (inst->fdInput, inst->inFile.st_size); // Modified from Phu
+
+    ftruncate64 (inst->fdOutput, inst->inFile.st_size); // Modified from Phu
 
     inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);
     if (inst->memOutput == MAP_FAILED)
