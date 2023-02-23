@@ -60,7 +60,7 @@ int mapFile (struct instance * inst)
         return EXIT_FAILURE;
     }
     fstat (inst->fdInput, &(inst->inFile));
-    inst->memInput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdInput, 0);
+    inst->memInput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, inst->fdInput, 0);
     if (inst->memInput == MAP_FAILED)
     {
         printf ("%s: Cannot map input file to memory - %s\n", inst->function, strerror(errno));
