@@ -165,7 +165,7 @@ int mapFile (struct instance * inst)
     inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);
     if (inst->memOutput == MAP_FAILED)
     {
-        printf ("%s: Cannot map output file to memory - %s\n", inst->function, strerror(errno));
+        printf ("%s: Can not map output file to memory - %s\n", inst->function, strerror(errno));
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
