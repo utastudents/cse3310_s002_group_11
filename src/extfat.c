@@ -89,11 +89,20 @@ int mapFile (struct instance * inst)
         inst->bootSectorMain->jumpBoot[1], inst->bootSectorMain->jumpBoot[2]);
         return EXIT_FAILURE;
     }
-    for (int i = 0; i < 390; i++)
+    if (!isZero(memcmp (inst->bootSectorMain->fileSystemName, "EXFAT   ", 8)))
+    {
+        fprintf (stderr, "%s: FileSystemName does not match \"EXFAT   \" [%c%c%c%c%c%c%c%c]\n", inst->function, \
+        inst->bootSectorMain->fileSystemName[0], inst->bootSectorMain->fileSystemName[1], \
+        inst->bootSectorMain->fileSystemName[2], inst->bootSectorMain->fileSystemName[3], \
+        inst->bootSectorMain->fileSystemName[4], inst->bootSectorMain->fileSystemName[5], \
+        inst->bootSectorMain->fileSystemName[6], inst->bootSectorMain->fileSystemName[7]);
+        return EXIT_FAILURE;
+    }
+    for (int i = 0; i < 53; i++)
     {
         if (isNEQ(inst->bootSectorMain->mustBeZero[i], 0))
         {
-            fprintf (stderr, "%s: MustBeZero value [0x%02X] is not zero at offset %d\n", inst->function, inst->bootSectorMain->mustBeZero[i], i);
+            fprintf (stderr, "%s: MustBeZero value [0x%02X] is not zero at offset %d <See exFat file system specification - Section 3.1.3>\n", inst->function, inst->bootSectorMain->mustBeZero[i], i);
 //            return EXIT_FAILURE;
         }
     }
@@ -138,12 +147,12 @@ int mapFile (struct instance * inst)
     }
     // Don't process output file unless we are copying
     if (inst->cflag != 1) return EXIT_SUCCESS;
-    if (isNull(inst->ovalue))
+    if (isNull(inst->ovalue)) // Merged from Rency
     {
         fprintf (stderr, "%s - Specified a copy without an output file\n", inst->function);
         return EXIT_FAILURE;
     }
-    if (isZero (strcmp (inst->ivalue, inst->ovalue)))
+    if (isZero (strcmp (inst->ivalue, inst->ovalue))) // Merged from Rency
     {
         inst->memOutput = inst->memInput;
         return EXIT_SUCCESS;
@@ -162,7 +171,7 @@ int mapFile (struct instance * inst)
 
     ftruncate64 (inst->fdOutput, inst->inFile.st_size); // Modified from Phu
 
-    inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);
+    inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);  // Merged from Phu
     if (inst->memOutput == MAP_FAILED)
     {
         printf ("%s: Can not map output file to memory - %s\n", inst->function, strerror(errno));
@@ -176,11 +185,11 @@ int unmapFile (struct instance * inst)
 {
     setFunction (inst);
     msync (inst->memInput, inst->inFile.st_size, MS_SYNC); // Merged from Phu
-    munmap (inst->memInput, inst->inFile.st_size);
-    close (inst->fdInput);
+    munmap (inst->memInput, inst->inFile.st_size); // Merged from Phu
+    close (inst->fdInput); // Merged from Phu
     msync (inst->memOutput, inst->inFile.st_size, MS_SYNC); // Merged from Phu
-    munmap (inst->memOutput, inst->inFile.st_size);
-    close (inst->fdOutput);
+    munmap (inst->memOutput, inst->inFile.st_size); // Merged from Phu
+    close (inst->fdOutput); // Merged from Phu
     return EXIT_SUCCESS;
 }
 
@@ -316,7 +325,7 @@ int main(int argc, char ** argv)
         unmapFile (&exfat);
         return EXIT_FAILURE;
     }
-    if (isTrue(exfat.cflag)) mmapCopy (&exfat);
+    if (isTrue(exfat.cflag)) mmapCopy (&exfat); // Merged from Phu
     unmapFile (&exfat);
     return EXIT_SUCCESS;
 }
