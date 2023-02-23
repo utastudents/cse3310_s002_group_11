@@ -178,7 +178,7 @@ int unmapFile (struct instance * inst)
     msync (inst->memInput, inst->inFile.st_size, MS_SYNC); // Merged from Phu
     munmap (inst->memInput, inst->inFile.st_size);
     close (inst->fdInput);
-    msync (inst->memOutput, inst->outFile.st_size, MS_SYNC); // Merged from Phu
+    msync (inst->memOutput, inst->inFile.st_size, MS_SYNC); // Merged from Phu
     munmap (inst->memOutput, inst->inFile.st_size);
     close (inst->fdOutput);
     return EXIT_SUCCESS;
