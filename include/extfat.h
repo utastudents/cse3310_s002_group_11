@@ -1,7 +1,8 @@
 #pragma once
 
-#include <stdbool.h>
 #include <inttypes.h>
+#include <stdbool.h>
+#include <sys/stat.h>
 
 /* ensure this header can be used in a C++ program */
 #ifdef __cplusplus

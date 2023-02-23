@@ -21,7 +21,7 @@
 #define isEQ(x,y) (x != y) // Boolean test for being equal
 #define setFunction(x) x->function=__func__ // Set instance structure function to current function
 // Inline version of:
-// void compareMemory(bool u, struct instance * v, struct instance * w, [struct insance member, doesn't translate] x, int y, char * z)
+// void compareMemory(bool u, struct instance * v, struct instance * w, [struct instance member, doesn't translate] x, int y, char * z)
 // {
 //    if (memcmp (&(v->x), &(w->x), y) != 0)
 //    {
@@ -32,7 +32,7 @@
 // }
 #define compareMemory(u, v, w, x, y, z) { if (memcmp (&(v->x), &(w->x), y) != 0) {OK = false; printf ("%s: Field %s is inconsistant and too messy to verbose print\n", inst->function, z); OK = u; }}
 // Inline version of:
-// void compareValues(bool v, struct instance * w, struct instance * x, [struct insance member, doesn't translate] y, char * z)
+// void compareValues(bool v, struct instance * w, struct instance * x, [struct instance member, doesn't translate] y, char * z)
 // {
 //     if (w->y != x->y)
 //     {
@@ -42,7 +42,7 @@
 //     }
 // }
 #define compareValues(v, w, x, y, z) { if (w->y != x->y) {OK = false; printf ("%s: Field %s is inconsistant [Main:%ld != %ld:Backup]\n", inst->function, z, (__uint64_t)(w->y), (__uint64_t)(x->y)); OK = v; }}
-#define limitCheck(x,y,z) ((x >= y) && (x <= z)) // Boolean test for x >= y >= z
+#define limitCheck(x,y,z) (((x) >= (y)) && ((x) <= (z))) // Boolean test for x >= y >= z
 
 // Map the files from the main memory structure
 int mapFile (struct instance * inst)
@@ -99,7 +99,7 @@ int mapFile (struct instance * inst)
             return EXIT_FAILURE;
         }
     }
-    if (inst->bootSectorMain->volumeLength < (1 << (20 - inst->bootSectorMain->bytesPerSectorShift)))
+    if (inst->bootSectorMain->volumeLength < (__uint64_t)(1 << (20 - inst->bootSectorMain->bytesPerSectorShift)))
     {
         fprintf (stderr, "%s: VolumeLength field is too small [%ld]", inst->function, inst->bootSectorMain->volumeLength);
         return EXIT_FAILURE;
@@ -117,6 +117,21 @@ int mapFile (struct instance * inst)
         fprintf (stderr, "%s: FatLength field is invalid [%d]", inst->function, inst->bootSectorMain->fatLength);
         return EXIT_FAILURE;
     }
+    if (!limitCheck(inst->bootSectorMain->clusterHeapOffset, \
+        inst->bootSectorMain->fatOffset + inst->bootSectorMain->fatLength * inst->bootSectorMain->numberOfFats, (__uint32_t)(-1)))
+    {
+        fprintf (stderr, "%s: ClusterHeapOffset field is invalid [%d]", inst->function, inst->bootSectorMain->clusterHeapOffset);
+        return EXIT_FAILURE;
+    }
+    if (!limitCheck(inst->bootSectorMain->clusterCount, inst->bootSectorMain->fatOffset + inst->bootSectorMain->fatLength * inst->bootSectorMain->numberOfFats, (__uint32_t)(-1) - 11))
+    {
+        fprintf (stderr, "%s: ClusterCount field is invalid [%d]", inst->function, inst->bootSectorMain->clusterCount);
+        return EXIT_FAILURE;
+    }
+
+    // Insert FirstClusterofRootDirectory
+    // Insert VolumeSerialNumber
+    // Insert PercentInUse
     return EXIT_SUCCESS;
 }
 
@@ -244,7 +259,7 @@ int compareBootSec (struct instance * inst)
     compareValues (false, inst->bootSectorMain, inst->bootSectorBackup, volumeSerialNumber, "VolumeSerialNumber");
     compareValues (false, inst->bootSectorMain, inst->bootSectorBackup, fileSystemRevision, "FileSystemRevision");
     compareValues (false, inst->bootSectorMain, inst->bootSectorBackup, fileSystemRevision, "FileSystemRevision");
-    compareValues (true, inst->bootSectorMain, inst->bootSectorBackup, volumeFlags, "VolumeFlags is implementation specic and can be ignored if it");
+//    compareValues (true, inst->bootSectorMain, inst->bootSectorBackup, volumeFlags, "VolumeFlags is implementation specic and can be ignored if it");
     compareValues (false, inst->bootSectorMain, inst->bootSectorBackup, bytesPerSectorShift, "BytesPerSectorShift");
     compareValues (false, inst->bootSectorMain, inst->bootSectorBackup, sectorsPerClusterShift, "SectorsPerClusterShift");
     compareValues (false, inst->bootSectorMain, inst->bootSectorBackup, numberOfFats, "NumberOfFats");
@@ -288,7 +303,7 @@ int main(int argc, char ** argv)
     bzero (&exfat.inFile, sizeof (struct stat));
     bzero (&exfat.outFile, sizeof (struct stat));
     exfat.memInput = NULL;
-    while ((exfat.opt = getopt (argc, argv, "i:co:h")) != -1)
+    while ((exfat.opt = getopt (argc, argv, "i:co:hfmv")) != -1)
     {
         switch (exfat.opt)
         {
