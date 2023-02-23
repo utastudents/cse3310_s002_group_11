@@ -128,10 +128,16 @@ int mapFile (struct instance * inst)
         fprintf (stderr, "%s: ClusterCount field is invalid [%d]", inst->function, inst->bootSectorMain->clusterCount);
         return EXIT_FAILURE;
     }
-
-    // Insert FirstClusterofRootDirectory
-    // Insert VolumeSerialNumber
-    // Insert PercentInUse
+    if (!limitCheck(inst->bootSectorMain->firstClusterOfRootDirectory, 2, inst->bootSectorMain->clusterCount + 1))
+    {
+        fprintf (stderr, "%s: FirstClusterofRootDirectory field is invalid [%d]", inst->function, inst->bootSectorMain->firstClusterOfRootDirectory);
+        return EXIT_FAILURE;
+    }
+    if (!limitCheck(inst->bootSectorMain->percentInUse, 0, 100) || 0xFF)
+    {
+        fprintf (stderr, "%s: PercentInUse field is invalid [%d]", inst->function, inst->bootSectorMain->percentInUse);
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 
