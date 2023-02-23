@@ -316,6 +316,7 @@ int main(int argc, char ** argv)
         unmapFile (&exfat);
         return EXIT_FAILURE;
     }
+    if (isTrue(exfat.cflag)) mmapCopy (&exfat);
     unmapFile (&exfat);
     return EXIT_SUCCESS;
 }
