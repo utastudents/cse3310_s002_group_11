@@ -104,3 +104,5 @@ int mapFile (struct instance *);
 int unmapFile (struct instance *);
 int mmapCopy (struct instance *);
 int compareBootSec (struct instance *);
+int initInstance (struct instance *);
+int fillInstance (struct instance *, int, char **);

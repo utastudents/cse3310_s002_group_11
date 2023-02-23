@@ -103,7 +103,7 @@ int mapFile (struct instance * inst)
         if (isNEQ(inst->bootSectorMain->mustBeZero[i], 0))
         {
             fprintf (stderr, "%s: MustBeZero value [0x%02X] is not zero at offset %d <See exFat file system specification - Section 3.1.3>\n", inst->function, inst->bootSectorMain->mustBeZero[i], i);
-//            return EXIT_FAILURE;
+            return EXIT_FAILURE;
         }
     }
     if (inst->bootSectorMain->volumeLength < (__uint64_t)(1 << (20 - inst->bootSectorMain->bytesPerSectorShift)))
@@ -159,7 +159,7 @@ int mapFile (struct instance * inst)
     }
     if (isZero(stat (inst->ovalue, &(inst->outFile)))) // Modified from Phu
     {
-        fprintf (stderr, "%s: Removing output file [%s] before copy\n", inst->function, inst->ovalue);
+        fprintf (stderr, "%s: Overwrite not allowed, removing output file [%s] before copy\n", inst->function, inst->ovalue);
         remove (inst->ovalue);
     }
     inst->fdOutput = open(inst->ovalue, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); // Merged from Phu
@@ -239,7 +239,28 @@ int compareBootSec (struct instance * inst)
     return (OK ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
-int main(int argc, char ** argv)
+int initInstance (struct instance * inst) // Added from Phu
+{
+    setFunction(inst);
+    inst->iflag = false;
+    inst->oflag = false;
+    inst->cflag = false;
+    inst->vflag = false;
+    inst->fflag = false;
+    inst->mflag = false;
+    inst->fdInput = -1;
+    inst->fdOutput = -1;
+    inst->opt = -1;
+    inst->ivalue = NULL;
+    inst->ovalue = NULL;
+    bzero (&(inst->inFile), sizeof (struct stat));
+    bzero (&(inst->outFile), sizeof (struct stat));
+    inst->memInput = NULL;
+    inst->memOutput = NULL;
+    return EXIT_SUCCESS;
+}
+
+int fillInstance (struct instance * inst, int argc, char ** argv) // Added from Phu
 {
     char * help[] = {
         "extfat utility",
@@ -255,71 +276,61 @@ int main(int argc, char ** argv)
         NULL
     };    
     int i = 0;
-    struct instance exfat;
-    setFunction ((&exfat));
-    exfat.iflag = false;
-    exfat.oflag = false;
-    exfat.cflag = false;
-    exfat.vflag = false;
-    exfat.fflag = false;
-    exfat.mflag = false;
-    exfat.fdInput = -1;
-    exfat.fdOutput = -1;
-    exfat.opt = -1;
-    exfat.ivalue = NULL;
-    exfat.ovalue = NULL;
-    bzero (&exfat.inFile, sizeof (struct stat));
-    bzero (&exfat.outFile, sizeof (struct stat));
-    exfat.memInput = NULL;
-    while ((exfat.opt = getopt (argc, argv, "i:co:hfmv")) != -1)
+    while ((inst->opt = getopt (argc, argv, "i:co:hfmv")) != -1)
     {
-        switch (exfat.opt)
+        switch (inst->opt)
         {
             case 'c':
-                exfat.cflag = true;
+                inst->cflag = true;
                 break;
             case 'i':
-                exfat.iflag = true;
-                exfat.ivalue = optarg;
+                inst->iflag = true;
+                inst->ivalue = optarg;
                 break;
             case 'o':
-                exfat.oflag = true;
-                exfat.ovalue = optarg;
+                inst->oflag = true;
+                inst->ovalue = optarg;
                 break;
             case ':':
                 if (optopt == 'i' || optopt == 'o')
                 fprintf (stderr, "Option requires an argument.\n");
                 return EXIT_FAILURE;
             case 'm': // Added from Rency
-                exfat.mflag = true;
+                inst->mflag = true;
                 break;
             case 'f': // Added from Rency
-                exfat.fflag = true;
+                inst->fflag = true;
                 break;
             case 'v': // Added from Rency
-                exfat.vflag = true;
+                inst->vflag = true;
                 break;
             case 'h':
-                while (help[i] != NULL)
-                {
-                    fprintf (stderr, "%s\n", help[i]);
-                    i++;
-                }
-                return EXIT_SUCCESS;
+                while (help[i] != NULL) printf ("%s\n", help[i++]);
+                exit (EXIT_SUCCESS);
             case '?':
                 fprintf (stderr, "Option not recognized\n");
                 return EXIT_FAILURE;
             default:;
         }
     }
-    if (isFalse(exfat.iflag)) exfat.ivalue = "test.image";
-    if (isFalse(exfat.oflag)) exfat.ovalue = exfat.ivalue;
-    if (isFalse(exfat.fflag) && isFalse(exfat.mflag)) exfat.mflag = true;
-    if (isTrue(exfat.fflag) && isTrue(exfat.mflag)) // Added from Rency
+    if (isFalse(inst->iflag)) inst->ivalue = "test.image";
+    if (isFalse(inst->oflag)) inst->ovalue = inst->ivalue;
+    if (isFalse(inst->fflag) && isFalse(inst->mflag)) inst->mflag = true;
+    if (isTrue(inst->fflag) && isTrue(inst->mflag)) // Added from Rency
     {
         fprintf (stderr, "-f and -m options are mutually exclusive");
-        return EXIT_FAILURE;
+        exit (EXIT_FAILURE);
     }
+    return EXIT_SUCCESS;
+}
+
+int main(int argc, char ** argv)
+{
+    struct instance exfat;
+    setFunction ((&exfat));
+    initInstance (&exfat); // Added by Phu
+    setFunction ((&exfat));
+    fillInstance (&exfat, argc, argv); // Added by Phu
     if (mapFile (&exfat) == EXIT_FAILURE)
     {
         unmapFile (&exfat);
