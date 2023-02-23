@@ -179,7 +179,7 @@ int unmapFile (struct instance * inst)
     munmap (inst->memInput, inst->inFile.st_size);
     close (inst->fdInput);
     msync (inst->memOutput, inst->outFile.st_size, MS_SYNC); // Merged from Phu
-    munmap (inst->memInput, inst->inFile.st_size);
+    munmap (inst->memOutput, inst->inFile.st_size);
     close (inst->fdOutput);
     return EXIT_SUCCESS;
 }
