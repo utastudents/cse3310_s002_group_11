@@ -56,7 +56,7 @@ int mapFile (struct instance * inst)
     inst->fdInput = open(inst->ivalue, O_RDWR);
     if (isFault(inst->fdInput))
     {
-        fprintf (stderr, "%s: Unable to open input file [%s] - %s", inst->function, inst->ivalue, strerror(errno));
+        fprintf (stderr, "%s: Unable to open input file [%s] - %s\n", inst->function, inst->ivalue, strerror(errno));
         return EXIT_FAILURE;
     }
     fstat (inst->fdInput, &(inst->inFile));
@@ -318,7 +318,7 @@ int fillInstance (struct instance * inst, int argc, char ** argv) // Added from 
     if (isFalse(inst->fflag) && isFalse(inst->mflag)) inst->mflag = true;
     if (isTrue(inst->fflag) && isTrue(inst->mflag)) // Added from Rency
     {
-        fprintf (stderr, "-f and -m options are mutually exclusive");
+        fprintf (stderr, "-f and -m options are mutually exclusive\n");
         exit (EXIT_FAILURE);
     }
     return EXIT_SUCCESS;
@@ -331,6 +331,16 @@ int main(int argc, char ** argv)
     initInstance (&exfat); // Added by Phu
     setFunction ((&exfat));
     fillInstance (&exfat, argc, argv); // Added by Phu
+    if (isTrue(exfat.vflag && isFalse(exfat.iflag)))
+    {
+        fprintf (stderr, "%s: Verification requires an input file be specified\n", exfat.function);
+        return EXIT_FAILURE;
+    }
+    if (isTrue(exfat.cflag && (isFalse(exfat.iflag) || isFalse(exfat.oflag))))
+    {
+        fprintf (stderr, "%s: Copy requires the input and output file be specified\n", exfat.function);
+        return EXIT_FAILURE;
+    }
     if (mapFile (&exfat) == EXIT_FAILURE)
     {
         unmapFile (&exfat);
