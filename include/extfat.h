@@ -141,16 +141,22 @@ struct instance
 
 // Function Declarations
 // Moved from extfat.c
-extern int mapFile (struct instance *);
-extern int unmapFile (struct instance *);
-extern int mmapCopy (struct instance *);
+#ifdef MMAP_C
+    int mapFile (struct instance *);
+    int unmapFile (struct instance *);
+    int mmapCopy (struct instance *);
+#else
+    extern int mapFile (struct instance *);
+    extern int unmapFile (struct instance *);
+    extern int mmapCopy (struct instance *);
+#endif
 
 #ifdef CMDLINE_C
-int initInstance (struct instance *);
-int fillInstance (struct instance *, int, char **);
+    int initInstance (struct instance *);
+    int fillInstance (struct instance *, int, char **);
 #else
-extern int initInstance (struct instance *);
-extern int fillInstance (struct instance *, int, char **);
+    extern int initInstance (struct instance *);
+    extern int fillInstance (struct instance *, int, char **);
 #endif
 
 #ifdef VERIFY_C
