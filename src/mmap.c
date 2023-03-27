@@ -15,37 +15,37 @@
 
 
 // Map the files from the main memory structure
-int mapFile (struct instance * inst)
+int mapFile (fileInfo * inst)
 {
     int val = 0;
     if (isNull(inst)) return EXIT_FAILURE;
     setFunction(inst);
-    inst->fdInput = open(inst->ivalue, O_RDWR);
-    if (isFault(inst->fdInput))
+    inst->fd = open(inst->filename, O_RDWR);
+    if (isFault(inst->fd))
     {
-        fprintf (stderr, "%s: Unable to open input file [%s] - %s\n", inst->function, inst->ivalue, strerror(errno));
+        fprintf (stderr, "%s: Unable to open input file [%s] - %s\n", inst->function, inst->filename, strerror(errno));
         return EXIT_FAILURE;
     }
-    fstat (inst->fdInput, &(inst->inFile));
-    inst->memInput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, inst->fdInput, 0);
-    if (inst->memInput == MAP_FAILED)
+    fstat (inst->fd, &(inst->inFile));
+    inst->Data = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, inst->fd, 0);
+    if (inst->Data == MAP_FAILED)
     {
         printf ("%s: Cannot map input file to memory - %s\n", inst->function, strerror(errno));
         return EXIT_FAILURE;
     }
-    inst->bootSectorMain = inst->memInput;
+    inst->M_Boot = inst->Data;
     if (verifyExfat (inst) == EXIT_FAILURE)
     {
         fprintf (stderr, "%s: Unable to verify Exfat Image\n", inst->function);
         return EXIT_FAILURE;
     }
     setFunction (inst);
-    val = (1 << inst->bootSectorMain->bytesPerSectorShift) * 12;
-    inst->bootSectorBackup = ((void *)(inst->memInput) + val);
+    val = (inst->SectorSize=1 << inst->M_Boot->BytesPerSectorShift) * 12;
+    inst->B_Boot = ((void *)(inst->Data) + val);
     if (compareBootSec (inst) == EXIT_FAILURE)
     {
-        msync (inst->memInput, inst->inFile.st_size, MS_SYNC);
-        munmap (inst->memInput, inst->inFile.st_size);
+        msync (inst->Data, inst->inFile.st_size, MS_SYNC);
+        munmap (inst->Data, inst->inFile.st_size);
         return EXIT_FAILURE;
     }
     setFunction(inst);
@@ -56,9 +56,9 @@ int mapFile (struct instance * inst)
         fprintf (stderr, "%s - Specified a copy without an output file\n", inst->function);
         return EXIT_FAILURE;
     }
-    if (isZero (strcmp (inst->ivalue, inst->ovalue))) // Merged from Rency
+    if (isZero (strcmp (inst->filename, inst->ovalue))) // Merged from Rency
     {
-        inst->memOutput = inst->memInput;
+        inst->memOutput = inst->Data;
         return EXIT_SUCCESS;
     }
     if (isZero(stat (inst->ovalue, &(inst->outFile)))) // Modified from Phu
@@ -85,12 +85,12 @@ int mapFile (struct instance * inst)
 }
 
 // Unmap the files from the main memory structure
-int unmapFile (struct instance * inst)
+int unmapFile (fileInfo * inst)
 {
     setFunction (inst);
-    msync (inst->memInput, inst->inFile.st_size, MS_SYNC); // Merged from Phu
-    munmap (inst->memInput, inst->inFile.st_size); // Merged from Phu
-    close (inst->fdInput); // Merged from Phu
+    msync (inst->Data, inst->inFile.st_size, MS_SYNC); // Merged from Phu
+    munmap (inst->Data, inst->inFile.st_size); // Merged from Phu
+    close (inst->fd); // Merged from Phu
     msync (inst->memOutput, inst->inFile.st_size, MS_SYNC); // Merged from Phu
     munmap (inst->memOutput, inst->inFile.st_size); // Merged from Phu
     close (inst->fdOutput); // Merged from Phu
@@ -98,17 +98,17 @@ int unmapFile (struct instance * inst)
 }
 
 // Use mmap to copy data from input to output files
-int mmapCopy (struct instance * inst)
+int mmapCopy (fileInfo * inst)
 {
     if (isNull(inst)) return EXIT_FAILURE;
     setFunction(inst);
-    if (isZero(strcmp (inst->ivalue, inst->ovalue)))
+    if (isZero(strcmp (inst->filename, inst->ovalue)))
     {
-        fprintf (stderr, "%s: Can not copy input file [%s] to itself\n", inst->function, inst->ivalue);
+        fprintf (stderr, "%s: Can not copy input file [%s] to itself\n", inst->function, inst->filename);
         return EXIT_FAILURE;
     }
     // memcpy has no fault condition, but will throw a segfault if out of bounds
     // Trap SIGSEGV to more gracefully handle this
-    memcpy (inst->memOutput, inst->memInput, inst->inFile.st_size); // Merged from Phu
+    memcpy (inst->memOutput, inst->Data, inst->inFile.st_size); // Merged from Phu
     return EXIT_SUCCESS;
 }

@@ -17,7 +17,7 @@
 
 int main(int argc, char ** argv)
 {
-    struct instance exfat;
+    fileInfo exfat; 
     setFunction ((&exfat));
     initInstance (&exfat); // Added by Phu
     setFunction ((&exfat));

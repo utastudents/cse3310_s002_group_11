@@ -10,7 +10,7 @@
 
 #include <extfat.h>
 
-int initInstance (struct instance * inst) // Added from Phu
+int initInstance (fileInfo * inst) // Added from Phu
 {
     setFunction(inst);
     inst->iflag = false;
@@ -19,19 +19,21 @@ int initInstance (struct instance * inst) // Added from Phu
     inst->vflag = false;
     inst->fflag = false;
     inst->mflag = false;
-    inst->fdInput = -1;
+    inst->fd = -1;
     inst->fdOutput = -1;
     inst->opt = -1;
-    inst->ivalue = NULL;
+    inst->filename = NULL;
     inst->ovalue = NULL;
+    int SectorSize=0;
+    int FileLength=0;
     bzero (&(inst->inFile), sizeof (struct stat));
     bzero (&(inst->outFile), sizeof (struct stat));
-    inst->memInput = NULL;
+    inst->Data = NULL;
     inst->memOutput = NULL;
     return EXIT_SUCCESS;
 }
 
-int fillInstance (struct instance * inst, int argc, char ** argv) // Added from Phu
+int fillInstance (fileInfo * inst, int argc, char ** argv) // Added from Phu
 {
     char * help[] = {
         "extfat utility",
@@ -56,7 +58,7 @@ int fillInstance (struct instance * inst, int argc, char ** argv) // Added from 
                 break;
             case 'i':
                 inst->iflag = true;
-                inst->ivalue = optarg;
+                inst->filename = optarg;
                 break;
             case 'o':
                 inst->oflag = true;
@@ -84,8 +86,8 @@ int fillInstance (struct instance * inst, int argc, char ** argv) // Added from 
             default:;
         }
     }
-    if (isFalse(inst->iflag)) inst->ivalue = "test.image";
-    if (isFalse(inst->oflag)) inst->ovalue = inst->ivalue;
+    if (isFalse(inst->iflag)) inst->filename = "test.image";
+    if (isFalse(inst->oflag)) inst->ovalue = inst->filename;
     if (isFalse(inst->fflag) && isFalse(inst->mflag)) inst->mflag = true;
     if (isTrue(inst->fflag) && isTrue(inst->mflag)) // Added from Rency
     {
