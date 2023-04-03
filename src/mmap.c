@@ -51,31 +51,31 @@ int mapFile (fileInfo * inst)
     setFunction(inst);
     // Don't process output file unless we are copying
     if (inst->cflag != 1) return EXIT_SUCCESS;
-    if (isNull(inst->ovalue)) // Merged from Rency
+    if (isNull(inst->ovalue)) 
     {
         fprintf (stderr, "%s - Specified a copy without an output file\n", inst->function);
         return EXIT_FAILURE;
     }
-    if (isZero (strcmp (inst->filename, inst->ovalue))) // Merged from Rency
+    if (isZero (strcmp (inst->filename, inst->ovalue))) 
     {
         inst->memOutput = inst->Data;
         return EXIT_SUCCESS;
     }
-    if (isZero(stat (inst->ovalue, &(inst->outFile)))) // Modified from Phu
+    if (isZero(stat (inst->ovalue, &(inst->outFile)))) 
     {
         fprintf (stderr, "%s: Overwrite not allowed, removing output file [%s] before copy\n", inst->function, inst->ovalue);
         remove (inst->ovalue);
     }
-    inst->fdOutput = open(inst->ovalue, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); // Merged from Phu
+    inst->fdOutput = open(inst->ovalue, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); 
     if (isFault(inst->fdOutput))
     {
         fprintf (stderr, "%s: Unable to open output file [%s] - %s\n", inst->function, inst->ovalue, strerror(errno));
         return EXIT_FAILURE;
     }
 
-    ftruncate64 (inst->fdOutput, inst->inFile.st_size); // Modified from Phu
+    ftruncate64 (inst->fdOutput, inst->inFile.st_size); 
 
-    inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);  // Merged from Phu
+    inst->memOutput = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fdOutput, 0);  
     if (inst->memOutput == MAP_FAILED)
     {
         printf ("%s: Can not map output file to memory - %s\n", inst->function, strerror(errno));
@@ -88,12 +88,12 @@ int mapFile (fileInfo * inst)
 int unmapFile (fileInfo * inst)
 {
     setFunction (inst);
-    msync (inst->Data, inst->inFile.st_size, MS_SYNC); // Merged from Phu
-    munmap (inst->Data, inst->inFile.st_size); // Merged from Phu
-    close (inst->fd); // Merged from Phu
-    msync (inst->memOutput, inst->inFile.st_size, MS_SYNC); // Merged from Phu
-    munmap (inst->memOutput, inst->inFile.st_size); // Merged from Phu
-    close (inst->fdOutput); // Merged from Phu
+    msync (inst->Data, inst->inFile.st_size, MS_SYNC); 
+    munmap (inst->Data, inst->inFile.st_size); 
+    close (inst->fd); 
+    msync (inst->memOutput, inst->inFile.st_size, MS_SYNC); 
+    munmap (inst->memOutput, inst->inFile.st_size); 
+    close (inst->fdOutput); 
     return EXIT_SUCCESS;
 }
 
@@ -109,6 +109,6 @@ int mmapCopy (fileInfo * inst)
     }
     // memcpy has no fault condition, but will throw a segfault if out of bounds
     // Trap SIGSEGV to more gracefully handle this
-    memcpy (inst->memOutput, inst->Data, inst->inFile.st_size); // Merged from Phu
+    memcpy (inst->memOutput, inst->Data, inst->inFile.st_size); 
     return EXIT_SUCCESS;
 }

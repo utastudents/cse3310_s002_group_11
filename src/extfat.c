@@ -19,9 +19,9 @@ int main(int argc, char ** argv)
 {
     fileInfo exfat; 
     setFunction ((&exfat));
-    initInstance (&exfat); // Added by Phu
+    initInstance (&exfat); 
     setFunction ((&exfat));
-    fillInstance (&exfat, argc, argv); // Added by Phu
+    fillInstance (&exfat, argc, argv); 
     if (isTrue(exfat.vflag && isFalse(exfat.iflag)))
     {
         fprintf (stderr, "%s: Verification requires an input file be specified\n", exfat.function);
@@ -37,7 +37,7 @@ int main(int argc, char ** argv)
         unmapFile (&exfat);
         return EXIT_FAILURE;
     }
-    if (isTrue(exfat.cflag)) mmapCopy (&exfat); // Merged from Phu
+    if (isTrue(exfat.cflag)) mmapCopy (&exfat); 
     unmapFile (&exfat);
     return EXIT_SUCCESS;
 }

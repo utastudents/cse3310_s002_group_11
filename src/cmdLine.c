@@ -10,7 +10,7 @@
 
 #include <extfat.h>
 
-int initInstance (fileInfo * inst) // Added from Phu
+int initInstance (fileInfo * inst) 
 {
     setFunction(inst);
     inst->iflag = false;
@@ -33,7 +33,7 @@ int initInstance (fileInfo * inst) // Added from Phu
     return EXIT_SUCCESS;
 }
 
-int fillInstance (fileInfo * inst, int argc, char ** argv) // Added from Phu
+int fillInstance (fileInfo * inst, int argc, char ** argv) 
 {
     char * help[] = {
         "extfat utility",
