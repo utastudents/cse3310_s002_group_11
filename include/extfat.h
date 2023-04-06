@@ -1,6 +1,7 @@
 
 #ifndef EXTFAT_H
 #define EXTFAT_H
+#endif
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -9,13 +10,6 @@
 #include <sys/types.h>
 
 #pragma once
-
-/* ensure this header can be used in a C++ program */
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 
 extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a glibc function with a manpage
 
@@ -83,37 +77,20 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
         unsigned char ExcessSpace;
     } Main_Boot;
 
-// Use portable declarations because byte size matters
-// Moved from extfat.c
-struct bootSector
+
+typedef struct
 {
-    __u_char jumpBoot[3];
-    __u_char fileSystemName[8];
-    __u_char mustBeZero[53];
-    __uint64_t partitionOffset;
-    __uint64_t volumeLength;
-    __uint32_t fatOffset;
-    __uint32_t fatLength;
-    __uint32_t clusterHeapOffset;
-    __uint32_t clusterCount;
-    __uint32_t firstClusterOfRootDirectory;
-    __uint32_t volumeSerialNumber;
-    __uint16_t fileSystemRevision;
-    __uint16_t volumeFlags;
-    __uint8_t bytesPerSectorShift;
-    __uint8_t sectorsPerClusterShift;
-    __uint8_t numberOfFats;
-    __uint8_t driveSelect;
-    __uint8_t percentInUse;
-    __uint8_t reserved;
-    __u_char bootCode[390];
-    __u_char bootSignature;
-};
+    unsigned char entryType;
+    unsigned char data[19];
+    u_int32_t firstCluster;
+    u_int64_t dataLength;
+} directoryEntry;
 
 // Main memory structure
 // Moved from extfat.c
 struct instance
 {
+    bool dflag;
     bool iflag;
     bool oflag;
     bool cflag;
@@ -130,17 +107,29 @@ struct instance
     void * memInput;
     void * memOutput;
     const char * function;
-    struct bootSector * bootSectorMain; // Sector 0
-    struct bootSector * bootSectorBackup; // Sector 12
+    Main_Boot * bootSectorMain; // Sector 0
+    Main_Boot * bootSectorBackup; // Sector 12
 };
 
-#ifdef __cplusplus
-    extern "C"
-};
-#endif
+typedef struct
+{
+    u_int8_t entryType;
+    u_int8_t entryCount;
+    u_int8_t pad1[2];
+    u_int32_t flags;
+    u_int32_t creationTime;
+    u_int32_t modificationTime;
+    u_int32_t accessTime;
+    u_int8_t pad2[12];
+} EXFAT_Directory;
 
 // Function Declarations
-// Moved from extfat.c
+#ifdef DIRECTORY_C
+    int directoryPrint (struct instance *);
+#else
+    extern int directoryPrint (struct instance *);
+#endif
+
 #ifdef MMAP_C
     int mapFile (struct instance *);
     int unmapFile (struct instance *);
@@ -165,6 +154,4 @@ struct instance
 #else
     extern int verifyExfat (struct instance *);
     extern int compareBootSec (struct instance *);
-#endif
-
 #endif

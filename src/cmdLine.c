@@ -40,14 +40,13 @@ int fillInstance (struct instance * inst, int argc, char ** argv) // Added from 
         "           -i xxx    where xxx is the input file name [This is optional, but -i test.image is implied if not specified]",
         "           -o xxx    where xxx is the output file number [This is optional, inputFile will be used if not specified]",
         "           -c        triggers the copying of input to output (This is optional)",
-        "           -m        use mmap for file access. [implied if -f and -m not specified]", // Added from Rency
-        "           -f        use fread for file access", // Addded from Rency
+        "           -d        directory listing",
         "           -v        verify exfat image", // Added from Rency
         "           -h        is this help message",
         NULL
     };    
     int i = 0;
-    while ((inst->opt = getopt (argc, argv, "i:co:hfmv")) != -1)
+    while ((inst->opt = getopt (argc, argv, "i:co:hdfmv")) != -1)
     {
         switch (inst->opt)
         {
@@ -66,6 +65,9 @@ int fillInstance (struct instance * inst, int argc, char ** argv) // Added from 
                 if (optopt == 'i' || optopt == 'o')
                 fprintf (stderr, "Option requires an argument.\n");
                 return EXIT_FAILURE;
+            case 'd':
+                inst->dflag = true;
+                break;
             case 'm': // Added from Rency
                 inst->mflag = true;
                 break;

@@ -40,7 +40,7 @@ int mapFile (struct instance * inst)
         return EXIT_FAILURE;
     }
     setFunction (inst);
-    val = (1 << inst->bootSectorMain->bytesPerSectorShift) * 12;
+    val = (1 << inst->bootSectorMain->BytesPerSectorShift) * 12;
     inst->bootSectorBackup = ((void *)(inst->memInput) + val);
     if (compareBootSec (inst) == EXIT_FAILURE)
     {

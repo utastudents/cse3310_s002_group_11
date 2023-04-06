@@ -38,6 +38,7 @@ int main(int argc, char ** argv)
         return EXIT_FAILURE;
     }
     if (isTrue(exfat.cflag)) mmapCopy (&exfat); // Merged from Phu
+    if (isTrue(exfat.dflag)) directoryPrint (&exfat);
     unmapFile (&exfat);
     return EXIT_SUCCESS;
 }
