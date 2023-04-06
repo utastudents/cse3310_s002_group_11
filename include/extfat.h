@@ -107,8 +107,8 @@ struct instance
     void * memInput;
     void * memOutput;
     const char * function;
-    Main_Boot * bootSectorMain; // Sector 0
-    Main_Boot * bootSectorBackup; // Sector 12
+    Main_Boot * M_Boot; // Sector 0
+    Main_Boot * B_Boot; // Sector 12
 };
 
 typedef struct

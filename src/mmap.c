@@ -33,15 +33,15 @@ int mapFile (struct instance * inst)
         printf ("%s: Cannot map input file to memory - %s\n", inst->function, strerror(errno));
         return EXIT_FAILURE;
     }
-    inst->bootSectorMain = inst->memInput;
+    inst->M_Boot = inst->memInput;
     if (verifyExfat (inst) == EXIT_FAILURE)
     {
         fprintf (stderr, "%s: Unable to verify Exfat Image\n", inst->function);
         return EXIT_FAILURE;
     }
     setFunction (inst);
-    val = (1 << inst->bootSectorMain->BytesPerSectorShift) * 12;
-    inst->bootSectorBackup = ((void *)(inst->memInput) + val);
+    val = (1 << inst->M_Boot->BytesPerSectorShift) * 12;
+    inst->B_Boot = ((void *)(inst->memInput) + val);
     if (compareBootSec (inst) == EXIT_FAILURE)
     {
         msync (inst->memInput, inst->inFile.st_size, MS_SYNC);

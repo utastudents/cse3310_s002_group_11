@@ -53,28 +53,27 @@ typedef struct
 
 const char * months[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
 
-// Read directory structure
-int directoryPrint (struct instance * inst)
+/*
+* Decode the Cluster for deirectory information
+* decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsigned int * file_count, unsigned int * current_file)
+* Returns EXIT_SUCCESS if no errors encountered
+* Returns EXIT_FAILURE and prints appropriate error
+* Options
+* memBase       [void *]       - Pointer to start of file memory
+* Cluster       [unsigned int] - The cluster that should be decoded for directory information
+* file          [exfile **]    - A pointer to a dynamically allocated file information structure
+* file_count    [unsigned int] - The number of elements in the dynamic file information structure
+* current_file  [unsigned int] - The current element to decode into
+*/
+
+int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsigned int * file_count, unsigned int * current_file)
 {
-    u_int32_t * fatMain;
-    directoryEntry * dirEntry;
-    unsigned int SectorSize = 1 << inst->bootSectorMain->BytesPerSectorShift;
-    unsigned int ClusterSize = 1 << inst->bootSectorMain->SectorsPerClusterShift;
-    unsigned int Cluster = SectorSize * ClusterSize;
-    unsigned int ClusterHeapOffset = inst->bootSectorMain->ClusterHeapOffset;
-    unsigned int FirstClusterOffset = SectorSize * ClusterHeapOffset;
-    unsigned int FatOffset = inst->bootSectorMain->FatOffset;
-    fatMain = (void *)(inst->memInput + SectorSize * FatOffset);
-    unsigned int RootDirectory = inst->bootSectorMain->FirstClusterOfRootDirectory;
-    unsigned int RootDirectoryOffset = FirstClusterOffset + Cluster * (fatMain[RootDirectory - 2] - 1);
-    dirEntry = (void *)(inst->memInput + RootDirectoryOffset);
-    exfile * files;
-    unsigned int file_count = 1;
-    unsigned int current_file = 0;
-    files = calloc (1, sizeof (exfile));
+    exfile * files = *file;
+    directoryEntry * dirEntry = memBase;
     for (unsigned int i = 0; i < (Cluster / 32); i++)
     {
         if (isZero(dirEntry[i].entryType)) continue;
+        // Decode the data by performing a lot of castings
         switch (dirEntry[i].entryType)
         {
             case 0x81: // Allocation Bitmap
@@ -82,32 +81,71 @@ int directoryPrint (struct instance * inst)
             case 0x83: // Volume Label
                 break;
             case 0x85: // File
-                current_file = file_count - 1;
-                files[current_file].attributes = (void *)(&dirEntry[i].data[3]);
-                files[current_file].creation = (void *)(&dirEntry[i].data[7]);
-                files[current_file].modify = (void *)(&dirEntry[i].data[11]);
-                files[current_file].access = (void *)(&dirEntry[i].data[15]);
-                files[current_file].checksum = *(u_int16_t *)(&dirEntry[i].data[1]);
-                files[current_file].accressDeciSeconds = *(u_int16_t *)(&dirEntry[i].data[19]);
-                files[current_file].modifyDeciSeconds = *(u_int16_t *)(&dirEntry[i].data[20]);
-                files = realloc (files, sizeof (exfile) * file_count++);
+                *current_file = *file_count - 1;
+                files[*current_file].attributes = (void *)(&dirEntry[i].data[3]);
+                files[*current_file].creation = (void *)(&dirEntry[i].data[7]);
+                files[*current_file].modify = (void *)(&dirEntry[i].data[11]);
+                files[*current_file].access = (void *)(&dirEntry[i].data[15]);
+                files[*current_file].checksum = *(u_int16_t *)(&dirEntry[i].data[1]);
+                files[*current_file].accressDeciSeconds = *(u_int16_t *)(&dirEntry[i].data[19]);
+                files[*current_file].modifyDeciSeconds = *(u_int16_t *)(&dirEntry[i].data[20]);
+                // Increase the directory size to always size +1 for safety
+                files = realloc (files, sizeof (exfile) * *file_count);
+                *file_count += 1;
+                if (isNull(files))
+                {
+                    // Can't free what completely failed
+                    perror ("realloc");
+                    return EXIT_FAILURE;
+                } 
                 break;
             case 0xC0: // File Stream
-                files[current_file].cluster = dirEntry[i].firstCluster;
-                files[current_file].nameLength = dirEntry[i].data[2];
-                files[current_file].length = *(u_int64_t *)(&dirEntry[i].data[7]);
-                files[current_file].nameHash = *(u_int16_t *)(&dirEntry[i].data[3]);
+                files[*current_file].cluster = dirEntry[i].firstCluster;
+                files[*current_file].nameLength = dirEntry[i].data[2];
+                files[*current_file].length = *(u_int64_t *)(&dirEntry[i].data[7]);
+                (files[*current_file]).nameHash = *(u_int16_t *)(&dirEntry[i].data[3]);
                 break;
             case 0xC1: // File Name
-                bzero (files[current_file].filename, 256);
+                bzero (files[*current_file].filename, 256);
                 for (int j = 1; (j < 30) && !isZero(*(u_int16_t *)(&dirEntry[i].data[j])); j += 2)
                 {
-                    files[current_file].filename[j / 2] = (char)(*(u_int16_t *)(&dirEntry[i].data[j]));
+                    files[*current_file].filename[j / 2] = (char)(*(u_int16_t *)(&dirEntry[i].data[j]));
                 }                    
                 break;
         }
     }
-    fprintf (stdout, "File Count of %d\n", file_count - 1);
+    // Since we keep reallocating memory, update the original pointer to point to the latest copy
+    *file = files;
+    return EXIT_SUCCESS;
+}
+
+/*
+* Print the root directory structure
+* int directoryPrint (struct instance * inst)
+* Returns EXIT_SUCCESS if no errors encountered
+* Returns EXIT_FAILURE and prints appropriate error
+* Options
+* inst [struct instance *] - Pointer to the main memory for the instance
+*/
+int directoryPrint (struct instance * inst)
+{
+    u_int32_t * fatMain;
+    unsigned int Cluster = (1 << inst->M_Boot->BytesPerSectorShift) * (1 << inst->M_Boot->SectorsPerClusterShift);
+    unsigned int FirstClusterOffset = (1 << inst->M_Boot->BytesPerSectorShift) * inst->M_Boot->ClusterHeapOffset;
+    unsigned int CurrentCluster = 0;
+    fatMain = (void *)(inst->memInput + (1 << inst->M_Boot->BytesPerSectorShift) * inst->M_Boot->FatOffset);
+    // Clusters are 1 based numbers, not 0 based
+    CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory;
+    exfile * files;
+    unsigned int file_count = 1, current_file = 0;
+    files = calloc (1, sizeof (exfile));
+    decode_cluster ((void *)(inst->memInput + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file);
+    while (fatMain[CurrentCluster] != (u_int32_t)(-1))
+    {
+        CurrentCluster = fatMain[CurrentCluster];
+        decode_cluster ((void *)(inst->memInput + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file);        
+    }
+    fprintf (stdout, "Entries Found in Root Directory: %d\n", file_count - 1);
     for (unsigned int i = 0; i < file_count - 1; i++)
     {
         fprintf (stdout, "%-30s ", files[i].filename);
@@ -123,6 +161,7 @@ int directoryPrint (struct instance * inst)
         fprintf (stdout, "%u:%u:%u", files[i].modify->hour, files[i].modify->minute, files[i].modify->doublesecs * 2 + files[i].modifyDeciSeconds);
         fprintf (stdout, "\n");
     }
+    // scan for next cluster, retry if found, leave and cleanup otherwise
     free (files);
     return EXIT_SUCCESS;
 }
