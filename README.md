@@ -8,6 +8,7 @@ extfat utils is a utility to manipulate extfat images.
 -f        use fread for file access
 -v        verify exfat image
 -h        is this help message
+-d        print root directory structure
 
 # Example Invocations:
 extfat -c -i inputFile.image -o outputFile.image

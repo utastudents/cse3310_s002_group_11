@@ -83,6 +83,14 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
         unsigned char ExcessSpace;
     } Main_Boot;
 
+typedef struct 
+{
+    unsigned char entryType;
+    unsigned char data[19];
+    u_int32_t firstCluster;
+    u_int64_t datalength;
+}directoryEntry;
+
 
 // Main memory structure
 // Moved from extfat.c
@@ -105,6 +113,7 @@ typedef struct
     bool vflag;
     bool fflag;
     bool mflag;  
+    bool dflag;
     int opt;
     struct stat inFile; 
     struct stat outFile;
@@ -115,9 +124,14 @@ typedef struct
     extern "C"
 };
 #endif
+//function Declarations ADDED from Chris
+#ifdef DIRECTORY_C
+    int directoryPrint(fileInfo *);
+#else
+    extern int directoryPrint(fileInfo *);
+#endif
 
-// Function Declarations
-// Moved from extfat.c
+
 #ifdef MMAP_C
     int mapFile (fileInfo *);
     int unmapFile (fileInfo *);
