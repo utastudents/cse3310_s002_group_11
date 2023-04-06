@@ -53,7 +53,7 @@ int verifyExfat (fileInfo * inst)
             return EXIT_FAILURE;
         }
     }
-    if (inst->M_Boot->VolumeLength < (__uint64_t)(1 << (20 - inst->M_Boot->BytesPerSectorShift)))
+    if ((__uint64_t)(inst->M_Boot->VolumeLength) < (__uint64_t)(1 << (20 - inst->M_Boot->BytesPerSectorShift)))
     {
         fprintf (stderr, "%s: VolumeLength field is too small [%ld]\n", inst->function, inst->M_Boot->VolumeLength);
         return EXIT_FAILURE;
@@ -71,14 +71,14 @@ int verifyExfat (fileInfo * inst)
         fprintf (stderr, "%s: FatLength field is invalid [%d]\n", inst->function, inst->M_Boot->FatLength);
         return EXIT_FAILURE;
     }
-    if (!limitCheck(inst->M_Boot->ClusterHeapOffset, \
-        inst->M_Boot->FatOffset + inst->M_Boot->FatLength * inst->M_Boot->NumberOfFats, (__uint32_t)(-1)))
+    if (!limitCheck ((__uint32_t)inst->M_Boot->ClusterHeapOffset, \
+         (__uint32_t)(inst->M_Boot->FatOffset + inst->M_Boot->FatLength * inst->M_Boot->NumberOfFats), (__uint32_t)(-1)))
     {
         fprintf (stderr, "%s: ClusterHeapOffset field is invalid [%d]\n", inst->function, inst->M_Boot->ClusterHeapOffset);
         return EXIT_FAILURE;
     }
-    if (!limitCheck(inst->M_Boot->ClusterCount, \
-        inst->M_Boot->FatOffset + inst->M_Boot->FatLength * inst->M_Boot->NumberOfFats, (__uint32_t)(-1) - 11))
+    if (!limitCheck ((__uint32_t)inst->M_Boot->ClusterCount, \
+         (__uint32_t)(inst->M_Boot->FatOffset + inst->M_Boot->FatLength * inst->M_Boot->NumberOfFats), (__uint32_t)(-1) - 11))
     {
         fprintf (stderr, "%s: ClusterCount field is invalid [%d]\n", inst->function, inst->M_Boot->ClusterCount);
         return EXIT_FAILURE;

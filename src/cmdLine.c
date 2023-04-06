@@ -24,8 +24,8 @@ int initInstance (fileInfo * inst)
     inst->opt = -1;
     inst->filename = NULL;
     inst->ovalue = NULL;
-    int SectorSize=0;
-    int FileLength=0;
+    inst-> SectorSize=0;
+    inst-> FileLength=0;
     bzero (&(inst->inFile), sizeof (struct stat));
     bzero (&(inst->outFile), sizeof (struct stat));
     inst->Data = NULL;
