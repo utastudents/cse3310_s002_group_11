@@ -15,6 +15,7 @@ extfat -c -i inputFile.image -o outputFile.image
 extfat -c -f -i inputFile.image -o outputFile.image
 extfat -v -f -i inputFile.image
 extfat -v -i inputFile.image
+extfat -d -i inputFile.image
 
 # Internals
 
