@@ -33,6 +33,8 @@ munit_example:unit_tests/munit/example.c
 
 # requirements tests
 
+system_tests: tests/system_tests.bash
+	./system_tests
 
 # example code
 mmap:examples/mmap.c  
