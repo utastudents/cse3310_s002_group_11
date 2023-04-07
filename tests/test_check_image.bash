@@ -2,7 +2,7 @@
 echo "Check for Image"
 
 if [ -f "test.image" ]; then
-    echo "Image File exists"
+    echo "Successfully found Image File"
     result=0
 else   
     result=1
