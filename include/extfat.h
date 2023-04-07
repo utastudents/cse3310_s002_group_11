@@ -8,15 +8,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#pragma once
-
-/* ensure this header can be used in a C++ program */
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-
 extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a glibc function with a manpage
 
 // Macro Declarations
@@ -26,7 +17,7 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
 #define isFalse(x) (x == false) // Boolean test for being false
 #define isFault(x) (x == -1) // Boolean test for being -1
 #define isNEQ(x,y) (x != y) // Boolean test for being unequal
-#define isEQ(x,y) (x != y) // Boolean test for being equal
+#define isEQ(x,y) (x == y) // Boolean test for being equal
 #define setFunction(x) x->function=__func__ // Set instance structure function to current function
 // Inline version of:
 // void compareMemory(bool u, fileInfo * v, fileInfo * w, [fileInfo member, doesn't translate] x, int y, char * z)
@@ -120,11 +111,6 @@ typedef struct
     const char * function;
 }fileInfo;
 
-#ifdef __cplusplus
-    extern "C"
-};
-#endif
-//function Declarations ADDED from Chris
 #ifdef DIRECTORY_C
     int directoryPrint(fileInfo *);
 #else
