@@ -17,6 +17,7 @@
 #include <sys/types.h>
 
 #include <extfat.h>
+#include <routines.h>
 
 int verifyExfat (fileInfo * inst)
 {
@@ -99,29 +100,19 @@ int verifyExfat (fileInfo * inst)
 // Compare the boot sectors from the main memory structure
 int compareBootSec (fileInfo * inst)
 {
-    bool OK = true;
     setFunction (inst);
-    compareMemory (false, inst->M_Boot, inst->B_Boot, JumpBoot, 3, "JumpBoot");
-    compareMemory (false, inst->M_Boot, inst->B_Boot, FileSystemName, 8, "FileSystemName");
-    compareMemory (false, inst->M_Boot, inst->B_Boot, MustBeZero, 53, "MustBeZero");
-    compareValues (false, inst->M_Boot, inst->B_Boot, PartitionOffset, "PartitionOffset");
-    compareValues (false, inst->M_Boot, inst->B_Boot, VolumeLength, "VolumeLength");
-    compareValues (false, inst->M_Boot, inst->B_Boot, FatOffset, "FatOffset");
-    compareValues (false, inst->M_Boot, inst->B_Boot, FatLength, "FatLength");
-    compareValues (false, inst->M_Boot, inst->B_Boot, ClusterHeapOffset, "ClusterHeapOffset");
-    compareValues (false, inst->M_Boot, inst->B_Boot, ClusterCount, "ClusterCount");
-    compareValues (false, inst->M_Boot, inst->B_Boot, FirstClusterOfRootDirectory, "FirstClusterOfRootDirectory");
-    compareValues (false, inst->M_Boot, inst->B_Boot, VolumeSerialNumber, "VolumeSerialNumber");
-    compareValues (false, inst->M_Boot, inst->B_Boot, FileSystemRevision, "FileSystemRevision");
-    compareValues (false, inst->M_Boot, inst->B_Boot, FileSystemRevision, "FileSystemRevision");
-//    compareValues (true, inst->M_Boot, inst->B_Boot, volumeFlags, "VolumeFlags is implementation specic and can be ignored if it");
-    compareValues (false, inst->M_Boot, inst->B_Boot, BytesPerSectorShift, "BytesPerSectorShift");
-    compareValues (false, inst->M_Boot, inst->B_Boot, SectorsPerClusterShift, "SectorsPerClusterShift");
-    compareValues (false, inst->M_Boot, inst->B_Boot, NumberOfFats, "NumberOfFats");
-    compareValues (false, inst->M_Boot, inst->B_Boot, DriveSelect, "DriveSelect");
-    compareValues (false, inst->M_Boot, inst->B_Boot, PercentInUse, "PercentInUse");
-    compareMemory (false, inst->M_Boot, inst->B_Boot, Reserved, 7, "Reserved");
-    compareMemory (false, inst->M_Boot, inst->B_Boot, BootCode, 390, "BootCode");
-    compareMemory (false, inst->M_Boot, inst->B_Boot, BootSignature, 2, "BootSignature");
-    return (OK ? EXIT_SUCCESS : EXIT_FAILURE);
+    int bytesPerSector = 2 << (inst->M_Boot->BytesPerSectorShift - 1); // used to calc checksum
+    UInt32 M_BootChecksum = BootChecksum((UCHAR*) inst->M_Boot, (short) bytesPerSector);
+    UInt32 B_BootChecksum = BootChecksum((UCHAR*) inst->B_Boot, (short) bytesPerSector);
+    printf("Checksums:\n(Main Boot) %x (Back Boot) %x\n",M_BootChecksum,B_BootChecksum);
+    bool OK = (M_BootChecksum == B_BootChecksum);
+    if (OK)
+    {
+        printf("File verified for use.\n");
+        return EXIT_SUCCESS;
+    }
+    else
+    {
+        return EXIT_FAILURE;
+    }
 }

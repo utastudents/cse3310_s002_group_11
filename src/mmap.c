@@ -42,10 +42,11 @@ int mapFile (fileInfo * inst)
     setFunction (inst);
     val = (inst->SectorSize=1 << inst->M_Boot->BytesPerSectorShift) * 12;
     inst->B_Boot = ((void *)(inst->Data) + val);
-    if (compareBootSec (inst) == EXIT_FAILURE)
+    if (inst->vflag && (compareBootSec (inst) == EXIT_FAILURE))
     {
         msync (inst->Data, inst->inFile.st_size, MS_SYNC);
         munmap (inst->Data, inst->inFile.st_size);
+        fprintf (stderr, "%s - Verification error, checksums of Main Boot and Back Boot do not match.\n", inst->function);
         return EXIT_FAILURE;
     }
     setFunction(inst);

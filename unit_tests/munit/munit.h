@@ -117,10 +117,6 @@
 #  endif
 #endif
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
 #if defined(__GNUC__)
 #  define MUNIT_LIKELY(expr) (__builtin_expect ((expr), 1))
 #  define MUNIT_UNLIKELY(expr) (__builtin_expect ((expr), 0))
@@ -520,10 +516,6 @@ int munit_suite_main_custom(const MunitSuite* suite,
 #define assert_not_null(ptr) munit_assert_not_null(ptr)
 
 #endif /* defined(MUNIT_ENABLE_ASSERT_ALIASES) */
-
-#if defined(__cplusplus)
-}
-#endif
 
 #endif /* !defined(MUNIT_H) */
 
