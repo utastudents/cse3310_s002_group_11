@@ -18,6 +18,7 @@
     ],
     "files.associations": {
         "types.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "string_view": "c"
     }
 }

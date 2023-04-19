@@ -42,6 +42,7 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
 #define compareValues(v, w, x, y, z) { if (w->y != x->y) {OK = false; printf ("%s: Field %s is inconsistant [Main:%ld != %ld:Backup]\n", inst->function, z, (__uint64_t)(w->y), (__uint64_t)(x->y)); OK = v; }}
 #define limitCheck(x,y,z) (((x) >= (y)) && ((x) <= (z))) // Boolean test for x >= y >= z
 
+
     // This header defines the layout of data on an extfat disk image.
     
     // For the details, please refer to
@@ -89,11 +90,12 @@ typedef struct
 {
     Main_Boot *M_Boot;
     Main_Boot *B_Boot;
-    void * FAT;
+    void * FAT; //fatmain
     void * Data; //void * memInput
     void * memOutput;
     char * filename; //char * ivalue
     char * ovalue;
+    char * xvalue;
     int fd; //int fdInput
     int fdOutput;
     int SectorSize;
@@ -101,22 +103,78 @@ typedef struct
     bool iflag;
     bool oflag;
     bool cflag;
-    bool vflag;
-    bool fflag;
-    bool mflag;  
+    bool vflag; 
     bool dflag;
+    bool xflag;
     int opt;
     struct stat inFile; 
     struct stat outFile;
     const char * function;
 }fileInfo;
 
+typedef struct
+
+{
+    u_int32_t doublesecs:5;
+    u_int32_t minute:6;
+    u_int32_t hour:5;
+    u_int32_t day:5;
+    u_int32_t month:4;
+    u_int32_t year:7;
+
+} timestamp;
+
+ 
+
+typedef struct
+
+{
+
+    u_int16_t readOnly:1;
+    u_int16_t hidden:1;
+    u_int16_t system:1;
+    u_int16_t reserved1:1;
+    u_int16_t directory:1;
+    u_int16_t archive:1;
+    u_int16_t reserved2:10;
+
+} attr;
+
+ 
+
+typedef struct
+
+{
+    char filename[256];
+    unsigned int nameLength;
+    unsigned int nameHash;
+    attr * attributes;
+    timestamp * modify;
+    timestamp * creation;
+    timestamp * access;
+    unsigned int cluster;
+    unsigned int checksum;
+    unsigned int modifyDeciSeconds;
+    unsigned int accressDeciSeconds;
+    unsigned long int length;
+} exfile;
+
 #ifdef DIRECTORY_C
+    const char * months[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
     int directoryPrint(fileInfo *);
+    int decode_cluster(void * , unsigned int , exfile ** , unsigned int * , unsigned int * );
 #else
     extern int directoryPrint(fileInfo *);
+    extern int decode_cluster(void * , unsigned int , exfile ** , unsigned int * , unsigned int * );
 #endif
 
+#ifdef EXTRACT_C
+    int extractfile(fileInfo *);
+   
+#else
+    extern int extractfile(fileInfo *);
+    
+#endif
 
 #ifdef MMAP_C
     int mapFile (fileInfo *);

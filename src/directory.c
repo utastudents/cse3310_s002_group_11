@@ -29,81 +29,6 @@
 
  
 
-typedef struct
-
-{
-
-    u_int32_t doublesecs:5;
-
-    u_int32_t minute:6;
-
-    u_int32_t hour:5;
-
-    u_int32_t day:5;
-
-    u_int32_t month:4;
-
-    u_int32_t year:7;
-
-} timestamp;
-
- 
-
-typedef struct
-
-{
-
-    u_int16_t readOnly:1;
-
-    u_int16_t hidden:1;
-
-    u_int16_t system:1;
-
-    u_int16_t reserved1:1;
-
-    u_int16_t directory:1;
-
-    u_int16_t archive:1;
-
-    u_int16_t reserved2:10;
-
-} attr;
-
- 
-
-typedef struct
-
-{
-
-    char filename[256];
-
-    unsigned int nameLength;
-
-    unsigned int nameHash;
-
-    attr * attributes;
-
-    timestamp * modify;
-
-    timestamp * creation;
-
-    timestamp * access;
-
-    unsigned int cluster;
-
-    unsigned int checksum;
-
-    unsigned int modifyDeciSeconds;
-
-    unsigned int accressDeciSeconds;
-
-    unsigned long int length;
-
-} exfile;
-
- 
-
-const char * months[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
 
  
 
@@ -175,9 +100,9 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
 
                 files[*current_file].checksum = *(u_int16_t *)(&dirEntry[i].data[1]);
 
-                files[*current_file].accressDeciSeconds = *(u_int16_t *)(&dirEntry[i].data[19]);
+                files[*current_file].accressDeciSeconds = 0; //*(u_int8_t *)((void *)(&dirEntry[i].entryType)+20);
 
-                files[*current_file].modifyDeciSeconds = *(u_int16_t *)(&dirEntry[i].data[20]);
+                files[*current_file].modifyDeciSeconds = 0; //*(u_int8_t *)((void *)(&dirEntry[i].entryType)+21);
 
                 // Increase the directory size to always size +1 for safety
 

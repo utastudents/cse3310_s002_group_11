@@ -17,14 +17,14 @@ int initInstance (fileInfo * inst)
     inst->oflag = false;
     inst->cflag = false;
     inst->vflag = false;
-    inst->fflag = false;
-    inst->mflag = false;
+    inst->xflag=false;
     inst->dflag=false; // Added from Chris
     inst->fd = -1;
     inst->fdOutput = -1;
     inst->opt = -1;
     inst->filename = NULL;
     inst->ovalue = NULL;
+    inst->xvalue=NULL;
     inst-> SectorSize=0;
     inst-> FileLength=0;
     bzero (&(inst->inFile), sizeof (struct stat));
@@ -51,7 +51,7 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
         NULL
     };    
     int i = 0;
-    while ((inst->opt = getopt (argc, argv, "i:co:hdfmv")) != -1)
+    while ((inst->opt = getopt (argc, argv, "i:co:x:hdv")) != -1)
     {
         switch (inst->opt)
         {
@@ -66,20 +66,18 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
                 inst->oflag = true;
                 inst->ovalue = optarg;
                 break;
+            case 'x':
+                inst->xflag = true;
+                inst->xvalue = optarg;
+                break;
             case ':':
-                if (optopt == 'i' || optopt == 'o')
+                if (optopt == 'i' || optopt == 'o' || optopt == 'x')
                 fprintf (stderr, "Option requires an argument.\n");
                 return EXIT_FAILURE;
             case 'd': // Added from Chris
                 inst->dflag = true;
                 break;
-        
-            case 'm': // Added from Rency
-                inst->mflag = true;
-                break;
-            case 'f': // Added from Rency
-                inst->fflag = true;
-                break;
+          
             case 'v': // Added from Rency
                 inst->vflag = true;
                 break;
@@ -94,11 +92,6 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
     }
     if (isFalse(inst->iflag)) inst->filename = "test.image";
     if (isFalse(inst->oflag)) inst->ovalue = inst->filename;
-    if (isFalse(inst->fflag) && isFalse(inst->mflag)) inst->mflag = true;
-    if (isTrue(inst->fflag) && isTrue(inst->mflag)) // Added from Rency
-    {
-        fprintf (stderr, "-f and -m options are mutually exclusive\n");
-        exit (EXIT_FAILURE);
-    }
+   
     return EXIT_SUCCESS;
 }
