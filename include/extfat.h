@@ -19,6 +19,11 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
 #define isNEQ(x,y) (x != y) // Boolean test for being unequal
 #define isEQ(x,y) (x == y) // Boolean test for being equal
 #define setFunction(x) x->function=__func__ // Set instance structure function to current function
+
+#define getClusterSize(x) ((1 << x->M_Boot->BytesPerSectorShift) * (1 << x->M_Boot->SectorsPerClusterShift))
+#define getFirstCluster(x) ((1 << x->M_Boot->BytesPerSectorShift) * x->M_Boot->ClusterHeapOffset)
+#define getFATStart(x) (void *)(x->Data + (1 << x->M_Boot->BytesPerSectorShift) * x->M_Boot->FatOffset)
+
 // Inline version of:
 // void compareMemory(bool u, fileInfo * v, fileInfo * w, [fileInfo member, doesn't translate] x, int y, char * z)
 // {
@@ -41,7 +46,6 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
 // }
 #define compareValues(v, w, x, y, z) { if (w->y != x->y) {OK = false; printf ("%s: Field %s is inconsistant [Main:%ld != %ld:Backup]\n", inst->function, z, (__uint64_t)(w->y), (__uint64_t)(x->y)); OK = v; }}
 #define limitCheck(x,y,z) (((x) >= (y)) && ((x) <= (z))) // Boolean test for x >= y >= z
-
 
     // This header defines the layout of data on an extfat disk image.
     
@@ -75,27 +79,19 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
         unsigned char ExcessSpace;
     } Main_Boot;
 
-typedef struct 
-{
-    unsigned char entryType;
-    unsigned char data[19];
-    u_int32_t firstCluster;
-    u_int64_t datalength;
-}directoryEntry;
-
-
 // Main memory structure
 // Moved from extfat.c
 typedef struct 
 {
     Main_Boot *M_Boot;
     Main_Boot *B_Boot;
-    void * FAT; //fatmain
+    void * FAT;
     void * Data; //void * memInput
     void * memOutput;
     char * filename; //char * ivalue
     char * ovalue;
     char * xvalue;
+    char * Dvalue;
     int fd; //int fdInput
     int fdOutput;
     int SectorSize;
@@ -104,8 +100,9 @@ typedef struct
     bool oflag;
     bool cflag;
     bool vflag; 
-    bool dflag;
     bool xflag;
+    bool dflag;
+    bool Dflag;
     int opt;
     struct stat inFile; 
     struct stat outFile;
@@ -113,7 +110,6 @@ typedef struct
 }fileInfo;
 
 typedef struct
-
 {
     u_int32_t doublesecs:5;
     u_int32_t minute:6;
@@ -121,15 +117,10 @@ typedef struct
     u_int32_t day:5;
     u_int32_t month:4;
     u_int32_t year:7;
-
 } timestamp;
 
- 
-
 typedef struct
-
 {
-
     u_int16_t readOnly:1;
     u_int16_t hidden:1;
     u_int16_t system:1;
@@ -137,13 +128,59 @@ typedef struct
     u_int16_t directory:1;
     u_int16_t archive:1;
     u_int16_t reserved2:10;
-
 } attr;
 
- 
+typedef struct 
+{
+    unsigned char entryType;
+    unsigned char secondaryCount;
+    unsigned short int checksum;
+    attr attributes;
+    unsigned short int reserved1;
+    timestamp create;
+    timestamp lastModified;
+    timestamp lastAccessed;
+    unsigned char create10ms;
+    unsigned char modify10ms;
+    unsigned char createUTCOffset;
+    unsigned char modifyUTCOffset;
+    unsigned char accessUTCOffset;
+    unsigned char reserved[7];
+} type85;
+
+typedef struct 
+{   
+    unsigned char entryType;
+    unsigned char secondaryCount;
+    unsigned char reserved1;
+    unsigned char nameLength;
+    unsigned short int nameHash;
+    unsigned char Reserved2[2];
+    unsigned long int validDataLength;
+    unsigned char Reserved3[4];
+    unsigned int firstCluster;
+    unsigned long int dataLength;
+} typeC0;
+
+typedef struct 
+{
+    unsigned char entryType;
+    unsigned char secondaryCount;
+    unsigned char filename[30];
+} typeC1;
+
+typedef struct 
+{
+    union
+    {
+        unsigned char data[32];
+        type85 file;
+        typeC0 stream;
+        typeC1 filename;
+    } raw;
+}directoryEntry;
 
 typedef struct
-
 {
     char filename[256];
     unsigned int nameLength;
@@ -154,27 +191,28 @@ typedef struct
     timestamp * access;
     unsigned int cluster;
     unsigned int checksum;
-    unsigned int modifyDeciSeconds;
-    unsigned int accressDeciSeconds;
+    unsigned char modifyDeciSeconds;
+    unsigned char createDeciSeconds;
     unsigned long int length;
 } exfile;
 
-#ifdef DIRECTORY_C
-    const char * months[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
-    int directoryPrint(fileInfo *);
-    int decode_cluster(void * , unsigned int , exfile ** , unsigned int * , unsigned int * );
-#else
-    extern int directoryPrint(fileInfo *);
-    extern int decode_cluster(void * , unsigned int , exfile ** , unsigned int * , unsigned int * );
-#endif
 
 #ifdef EXTRACT_C
     int extractfile(fileInfo *);
-   
+    extern int decode_cluster(void *, unsigned int , exfile **, unsigned int *, unsigned int *);
 #else
     extern int extractfile(fileInfo *);
-    
+   
 #endif
+
+#ifdef DIRECTORY_C
+    int directoryPrint(fileInfo *);
+    int deleteFile (fileInfo *);
+#else
+    extern int directoryPrint(fileInfo *);
+    extern int deleteFile (fileInfo *);
+#endif
+
 
 #ifdef MMAP_C
     int mapFile (fileInfo *);
