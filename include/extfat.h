@@ -130,6 +130,25 @@ typedef struct
     u_int16_t reserved2:10;
 } attr;
 
+typedef struct
+{
+    unsigned char entryType;
+    unsigned char flags;
+    unsigned char reserved[18];
+    unsigned int cluster;
+    unsigned long int length;
+} type81;
+
+typedef struct
+{
+    unsigned char entryType;
+    unsigned char reserved1[3];
+    unsigned int checksum;
+    unsigned int reserved2[12];
+    unsigned int cluster;
+    unsigned long int length;
+} type82;
+
 typedef struct 
 {
     unsigned char entryType;
@@ -174,6 +193,8 @@ typedef struct
     union
     {
         unsigned char data[32];
+        type81 bitmap;
+        type82 table;
         type85 file;
         typeC0 stream;
         typeC1 filename;
