@@ -19,14 +19,16 @@ int initInstance (fileInfo * inst)
     inst->vflag = false;
     inst->fflag = false;
     inst->mflag = false;
-    inst->dflag=false; // Added from Chris
+    inst->dflag = false; // Added from Chris
+    inst->Dflag = false;
     inst->fd = -1;
     inst->fdOutput = -1;
     inst->opt = -1;
     inst->filename = NULL;
     inst->ovalue = NULL;
-    inst-> SectorSize=0;
-    inst-> FileLength=0;
+    inst->Dvalue = NULL;
+    inst-> SectorSize = 0;
+    inst-> FileLength = 0;
     bzero (&(inst->inFile), sizeof (struct stat));
     bzero (&(inst->outFile), sizeof (struct stat));
     inst->Data = NULL;
@@ -42,16 +44,15 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
         "",
         "           -i xxx    where xxx is the input file name [This is optional, but -i test.image is implied if not specified]",
         "           -o xxx    where xxx is the output file number [This is optional, inputFile will be used if not specified]",
-        "           -c        triggers the copying of input to output (This is optional)",
+        "           -c        copy input ",
         "           -d        directory listing",// Added from Chris
-        "           -m        use mmap for file access. [implied if -f and -m not specified]", // Added from Rency
-        "           -f        use fread for file access", // Addded from Rency
+        "           -D        delete file",
         "           -v        verify exfat image", // Added from Rency
         "           -h        is this help message",
         NULL
     };    
     int i = 0;
-    while ((inst->opt = getopt (argc, argv, "i:co:hdfmv")) != -1)
+    while ((inst->opt = getopt (argc, argv, "i:co:hdD:fmv")) != -1)
     {
         switch (inst->opt)
         {
@@ -66,6 +67,10 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
                 inst->oflag = true;
                 inst->ovalue = optarg;
                 break;
+            case 'D':
+                inst->Dflag = true;
+                inst->Dvalue = optarg;
+                break;
             case ':':
                 if (optopt == 'i' || optopt == 'o')
                 fprintf (stderr, "Option requires an argument.\n");
@@ -73,7 +78,6 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
             case 'd': // Added from Chris
                 inst->dflag = true;
                 break;
-        
             case 'm': // Added from Rency
                 inst->mflag = true;
                 break;
