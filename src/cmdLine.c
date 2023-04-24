@@ -17,8 +17,6 @@ int initInstance (fileInfo * inst)
     inst->oflag = false;
     inst->cflag = false;
     inst->vflag = false;
-    inst->fflag = false;
-    inst->mflag = false;
     inst->dflag = false; // Added from Chris
     inst->Dflag = false;
     inst->fd = -1;
@@ -33,6 +31,7 @@ int initInstance (fileInfo * inst)
     bzero (&(inst->outFile), sizeof (struct stat));
     inst->Data = NULL;
     inst->memOutput = NULL;
+    inst->allocationBitmap = 0;
     return EXIT_SUCCESS;
 }
 
@@ -78,12 +77,6 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
             case 'd': // Added from Chris
                 inst->dflag = true;
                 break;
-            case 'm': // Added from Rency
-                inst->mflag = true;
-                break;
-            case 'f': // Added from Rency
-                inst->fflag = true;
-                break;
             case 'v': // Added from Rency
                 inst->vflag = true;
                 break;
@@ -98,11 +91,5 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
     }
     if (isFalse(inst->iflag)) inst->filename = "test.image";
     if (isFalse(inst->oflag)) inst->ovalue = inst->filename;
-    if (isFalse(inst->fflag) && isFalse(inst->mflag)) inst->mflag = true;
-    if (isTrue(inst->fflag) && isTrue(inst->mflag)) // Added from Rency
-    {
-        fprintf (stderr, "-f and -m options are mutually exclusive\n");
-        exit (EXIT_FAILURE);
-    }
     return EXIT_SUCCESS;
 }
