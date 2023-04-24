@@ -33,13 +33,13 @@ int extractfile (fileInfo * inst)
 
     for (unsigned int i = 0; i < file_count - 1; i++)
 
-    {
-        
+    { 
         if isZero(strcmp(inst->xvalue,files[i].filename))
         {
             FILE *fp;
             fp=fopen(inst->ovalue,"w+");
-             if (fp == NULL){
+             if (fp == NULL)
+            {
               perror("fopen");
             }
         

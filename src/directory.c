@@ -130,7 +130,7 @@ int directoryPrint (fileInfo * inst)
     return EXIT_SUCCESS;
 }
 
-int deleteFile (fileInfo * inst)
+int deleteFile (fileInfo * inst) //Function from Chris
 {
     u_int32_t * fatMain;
     unsigned int Cluster = getClusterSize(inst);
