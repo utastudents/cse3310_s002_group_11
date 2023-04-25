@@ -221,7 +221,7 @@ typedef struct
     unsigned char modifyDeciSeconds;
     unsigned char createDeciSeconds;
     unsigned long int length;
-    unsigned char * directoryFile[256]; // Pointers to the start of all associated directory entries used to build this
+    void * directoryFile[256]; // Pointers to the start of all associated directory entries used to build this
 } exfile;
 
 typedef struct

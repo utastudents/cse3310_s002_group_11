@@ -48,6 +48,7 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
                 break;
 
             case 0x85: // File
+                index = 0;
                 *current_file = *file_count - 1;
                 files[*current_file].attributes = &dirEntry[i].raw.file.attributes;
                 files[*current_file].creation = &dirEntry[i].raw.file.create;
@@ -56,10 +57,10 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
                 files[*current_file].checksum = dirEntry[i].raw.file.checksum;
                 files[*current_file].createDeciSeconds = dirEntry[i].raw.file.create10ms;
                 files[*current_file].modifyDeciSeconds = dirEntry[i].raw.file.modify10ms;
-                files[*current_file].directoryFile[0] = dirEntry[i].raw.data; // Preserve the location of the directory entry
+                files[*current_file].directoryFile[index] = (void *)dirEntry[i].raw.data; // Preserve the location of the directory entry
                 // Increase the directory size to always size +1 for safety
-                files = realloc (files, sizeof (exfile) * *file_count);
                 *file_count += 1;
+                files = realloc (files, sizeof (exfile) * *file_count);
                 if (isNull(files))
                 {
                     // Can't free what completely failed
@@ -105,16 +106,16 @@ int directoryPrint (fileInfo * inst)
     u_int32_t * fatMain;
     unsigned int Cluster = getClusterSize(inst);
     unsigned int FirstClusterOffset = getFirstCluster(inst);
-    unsigned int CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory, file_count = 1, current_file = 0;
+    unsigned int CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory - 2, file_count = 1, current_file = 0;
     char * months[] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
     fatMain = (void *)getFATStart(inst);
     exfile * files;
     files = calloc (1, sizeof (exfile));
-    decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file, inst);
-    while (fatMain[CurrentCluster - 2] != (u_int32_t)(-1))
+    while (true)
     {
-        CurrentCluster = fatMain[CurrentCluster - 2];
-        decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file, inst);           
+        decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * CurrentCluster), Cluster, &files, &file_count, &current_file, inst);           
+        CurrentCluster = fatMain[CurrentCluster];
+        if (CurrentCluster == (u_int32_t)(-1)) break;
     }
     fprintf (stdout, "Entries Found in Root Directory: %u\n", file_count - 1);
     for (unsigned int i = 0; i < (file_count - 1); i++)
@@ -126,7 +127,7 @@ int directoryPrint (fileInfo * inst)
             files[i].attributes->system ? "S" : "_", \
             files[i].attributes->directory ? "D" : "_", \
             files[i].attributes->archive ? "A" : "_");
-        if (files[i].attributes->directory) fprintf (stdout, "%-20s", "< DIRECTORY >");
+        if (files[i].attributes->directory) fprintf (stdout, "%-21s", "< DIRECTORY >");
         else fprintf (stdout, "%*lu ", -20, files[i].length);
         fprintf (stdout, "%s %02u %04u ", months[files[i].modify->month], files[i].modify->day, files[i].modify->year + 1980);
         fprintf (stdout, "%u:%u:%u\n", files[i].modify->hour, files[i].modify->minute, ((files[i].modify->doublesecs * 20) + files[i].modifyDeciSeconds) / 10);
@@ -151,15 +152,15 @@ int deleteFile (fileInfo * inst)
     bool found = false;
     unsigned int Cluster = getClusterSize(inst);
     unsigned int FirstClusterOffset = getFirstCluster(inst);
-    unsigned int CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory, file_count = 1, current_file = 0;
+    unsigned int CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory - 2, file_count = 1, current_file = 0;
     exfile * files;
     fatMain = getFATStart (inst);
     files = calloc (1, sizeof (exfile));
-    decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file, inst);
-    while (fatMain[CurrentCluster - 2] != (u_int32_t)(-1))
+    while (true)
     {
-        CurrentCluster = fatMain[CurrentCluster - 2];
-        decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file, inst);       
+        decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * CurrentCluster), Cluster, &files, &file_count, &current_file, inst);           
+        CurrentCluster = fatMain[CurrentCluster];
+        if (CurrentCluster == (u_int32_t)(-1)) break;
     }
     for (unsigned int i = 0; i < file_count - 1; i++)
     {
@@ -168,15 +169,21 @@ int deleteFile (fileInfo * inst)
             fprintf (stdout, "Deleting %s\n", files[i].filename);
             found = true; // Set flag if we found something
             unsigned char j = 0;
-            do
+            while (true)
             {
-            (files[i].directoryFile[j++])[0] &= 0x7F; // Unset the occupied bit
-            } while (!isNull(files[i].directoryFile[j])); // Walk the array
+//            directoryFile values are being cleared for unknown reason
+//            fprintf (stdout, "Clearing bit at %p\n", files[i].directoryFile[j++]);
+//            (files[i].directoryFile[j++])[0] &= 0x7F; // Unset the occupied bit
+            if (files[i].directoryFile[j] == NULL) break;
+            } // Walk the array
             unsigned char * bitmap = inst->Data + getFirstCluster(inst) + getClusterSize(inst) * (inst->allocationBitmap - 2);
-            // Fix to walk the FAT entry list
             CurrentCluster = files[i].cluster;
-            while (fatMain[CurrentCluster - 2] != (u_int32_t)(-1))
+            while (true)
+            {
                 bitmap[CurrentCluster / 8] &= ~(1 << (CurrentCluster % 8)); // Unset the bitmap entries
+                CurrentCluster = fatMain[CurrentCluster];
+                if (CurrentCluster == (u_int32_t)(-1)) break;
+            }
             break;
        } 
     }
