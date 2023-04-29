@@ -17,16 +17,17 @@ int initInstance (fileInfo * inst)
     inst->oflag = false;
     inst->cflag = false;
     inst->vflag = false;
-    inst->fflag = false;
-    inst->mflag = false;
-    inst->dflag=false; // Added from Chris
+    inst->dflag = false; // Added from Chris
+    inst->xflag = false;
+    inst->Dflag = false;
     inst->fd = -1;
     inst->fdOutput = -1;
     inst->opt = -1;
     inst->filename = NULL;
     inst->ovalue = NULL;
-    inst-> SectorSize=0;
-    inst-> FileLength=0;
+    inst->Dvalue = NULL;
+    inst-> SectorSize = 0;
+    inst-> FileLength = 0;
     bzero (&(inst->inFile), sizeof (struct stat));
     bzero (&(inst->outFile), sizeof (struct stat));
     inst->Data = NULL;
@@ -42,16 +43,16 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
         "",
         "           -i xxx    where xxx is the input file name [This is optional, but -i test.image is implied if not specified]",
         "           -o xxx    where xxx is the output file number [This is optional, inputFile will be used if not specified]",
-        "           -c        triggers the copying of input to output (This is optional)",
+        "           -c        copy input ",
         "           -d        directory listing",// Added from Chris
-        "           -m        use mmap for file access. [implied if -f and -m not specified]", // Added from Rency
-        "           -f        use fread for file access", // Addded from Rency
+        "           -D        delete file",// Added from Chris
+        "           -x xxx    where xxx is the file to be extracted"
         "           -v        verify exfat image", // Added from Rency
         "           -h        is this help message",
         NULL
     };    
     int i = 0;
-    while ((inst->opt = getopt (argc, argv, "i:co:hdfmv")) != -1)
+    while ((inst->opt = getopt (argc, argv, "i:co:x:hdD:fmv")) != -1)
     {
         switch (inst->opt)
         {
@@ -66,19 +67,20 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
                 inst->oflag = true;
                 inst->ovalue = optarg;
                 break;
+            case 'x':
+                inst->xflag = true;
+                inst->xvalue = optarg;
+                break;
+            case 'D':
+                inst->Dflag = true;
+                inst->Dvalue = optarg;
+                break;
             case ':':
-                if (optopt == 'i' || optopt == 'o')
+                if (optopt == 'i' || optopt == 'o'|| optopt == 'x' )
                 fprintf (stderr, "Option requires an argument.\n");
                 return EXIT_FAILURE;
             case 'd': // Added from Chris
                 inst->dflag = true;
-                break;
-        
-            case 'm': // Added from Rency
-                inst->mflag = true;
-                break;
-            case 'f': // Added from Rency
-                inst->fflag = true;
                 break;
             case 'v': // Added from Rency
                 inst->vflag = true;
@@ -94,11 +96,7 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
     }
     if (isFalse(inst->iflag)) inst->filename = "test.image";
     if (isFalse(inst->oflag)) inst->ovalue = inst->filename;
-    if (isFalse(inst->fflag) && isFalse(inst->mflag)) inst->mflag = true;
-    if (isTrue(inst->fflag) && isTrue(inst->mflag)) // Added from Rency
-    {
-        fprintf (stderr, "-f and -m options are mutually exclusive\n");
-        exit (EXIT_FAILURE);
-    }
+   
+
     return EXIT_SUCCESS;
 }

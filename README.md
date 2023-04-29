@@ -2,13 +2,14 @@ extfat utils is a utility to manipulate extfat images.
 
 # Command Options:
 -i xxx    where xxx is the input file name [This is optional, but -i test.image is implied if not specified]
--o xxx    where xxx is the output file number [This is optional, inputFile will be used if not specified]
+-o xxx    where xxx is the output file name [This is optional, inputFile will be used if not specified]
 -c        triggers the copying of input to output (This is optional)
 -m        use mmap for file access. [implied if -f and -m not specified]
 -f        use fread for file access
 -v        verify exfat image
 -h        is this help message
 -d        print root directory structure
+-x xxx    where xxx is the file to be extracted 
 
 # Example Invocations:
 extfat -c -i inputFile.image -o outputFile.image
@@ -16,6 +17,7 @@ extfat -c -f -i inputFile.image -o outputFile.image
 extfat -v -f -i inputFile.image
 extfat -v -i inputFile.image
 extfat -d -i inputFile.image
+extfat -x extractFile.image -i inputFile.image -o outputFile.image
 
 # Internals
 
