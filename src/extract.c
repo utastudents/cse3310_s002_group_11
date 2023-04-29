@@ -19,18 +19,19 @@ int extractfile (fileInfo * inst)
     u_int32_t * fatMain; //acessing the FAT table
     unsigned int Cluster = getClusterSize(inst); 
     unsigned int FirstClusterOffset = getFirstCluster(inst);
-    unsigned int CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory, file_count = 1, current_file = 0;
+    unsigned int CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory - 2, file_count = 1, current_file = 0;
     exfile * files; 
     fatMain = getFATStart (inst);
     files = calloc (1, sizeof (exfile));
-    decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file);
-    while (fatMain[CurrentCluster] != (u_int32_t)(-1)) //check Fat table for next cluster 
+    
+    while (true)
     {
-        CurrentCluster = fatMain[CurrentCluster]; //setup for scanning next cluster
-        decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)), Cluster, &files, &file_count, &current_file);       
+        decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * CurrentCluster), Cluster, &files, &file_count, &current_file, inst);           
+        CurrentCluster = fatMain[CurrentCluster];
+        if (CurrentCluster == (u_int32_t)(-1)) break;
     }
    
-
+   
     for (unsigned int i = 0; i < file_count - 1; i++)
 
     { 

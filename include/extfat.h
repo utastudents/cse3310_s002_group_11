@@ -240,7 +240,7 @@ typedef struct
 
 #ifdef EXTRACT_C
     int extractfile(fileInfo *);
-    extern int decode_cluster(void *, unsigned int , exfile **, unsigned int *, unsigned int *);
+    extern int decode_cluster(void *, unsigned int , exfile **, unsigned int *, unsigned int *, fileInfo *);
 #else
     extern int extractfile(fileInfo *);
    
