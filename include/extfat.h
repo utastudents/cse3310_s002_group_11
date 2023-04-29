@@ -20,6 +20,7 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
 #define isEQ(x,y) (x == y) // Boolean test for being equal
 #define setFunction(x) x->function=__func__ // Set instance structure function to current function
 
+// Math equations to cleanup code
 #define getClusterSize(x) ((1 << x->M_Boot->BytesPerSectorShift) * (1 << x->M_Boot->SectorsPerClusterShift))
 #define getFirstCluster(x) ((1 << x->M_Boot->BytesPerSectorShift) * x->M_Boot->ClusterHeapOffset)
 #define getFATStart(x) (void *)(x->Data + (1 << x->M_Boot->BytesPerSectorShift) * x->M_Boot->FatOffset)
@@ -48,9 +49,7 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
 #define limitCheck(x,y,z) (((x) >= (y)) && ((x) <= (z))) // Boolean test for x >= y >= z
 
     // This header defines the layout of data on an extfat disk image.
-    
     // For the details, please refer to
-
     //            https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification
 
     typedef struct
@@ -80,7 +79,6 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
     } Main_Boot;
 
 // Main memory structure
-// Moved from extfat.c
 typedef struct 
 {
     Main_Boot *M_Boot;
@@ -107,8 +105,10 @@ typedef struct
     struct stat inFile; 
     struct stat outFile;
     const char * function;
+    unsigned int allocationBitmap; // Pointer to Allocation Bitmap
 }fileInfo;
 
+// From ExFAT specification
 typedef struct
 {
     u_int32_t doublesecs:5;
@@ -119,6 +119,7 @@ typedef struct
     u_int32_t year:7;
 } timestamp;
 
+// From ExFAT specification
 typedef struct
 {
     u_int16_t readOnly:1;
@@ -130,6 +131,28 @@ typedef struct
     u_int16_t reserved2:10;
 } attr;
 
+// From ExFAT specification
+typedef struct
+{
+    unsigned char entryType;
+    unsigned char flags;
+    unsigned char reserved[18];
+    unsigned int cluster;
+    unsigned long int length;
+} type81;
+
+// From ExFAT specification
+typedef struct
+{
+    unsigned char entryType;
+    unsigned char reserved1[3];
+    unsigned int checksum;
+    unsigned char reserved2[12];
+    unsigned int cluster;
+    unsigned long int length;
+} type82;
+
+// From ExFAT specification
 typedef struct 
 {
     unsigned char entryType;
@@ -148,6 +171,7 @@ typedef struct
     unsigned char reserved[7];
 } type85;
 
+// From ExFAT specification
 typedef struct 
 {   
     unsigned char entryType;
@@ -162,6 +186,7 @@ typedef struct
     unsigned long int dataLength;
 } typeC0;
 
+// From ExFAT specification
 typedef struct 
 {
     unsigned char entryType;
@@ -169,17 +194,21 @@ typedef struct
     unsigned char filename[30];
 } typeC1;
 
+// Overlapping mapping of a directory entry via union
 typedef struct 
 {
     union
     {
         unsigned char data[32];
+        type81 bitmap;
+        type82 table;
         type85 file;
         typeC0 stream;
         typeC1 filename;
     } raw;
 }directoryEntry;
 
+// File information extracted from ExFAT directory entries
 typedef struct
 {
     char filename[256];
@@ -194,8 +223,20 @@ typedef struct
     unsigned char modifyDeciSeconds;
     unsigned char createDeciSeconds;
     unsigned long int length;
+    void * directoryFile[256]; // Pointers to the start of all associated directory entries used to build this
 } exfile;
 
+typedef struct
+{
+    unsigned char b0:1;
+    unsigned char b1:1;
+    unsigned char b2:1;
+    unsigned char b3:1;
+    unsigned char b4:1;
+    unsigned char b5:1;
+    unsigned char b6:1;
+    unsigned char b7:1;
+} binaryByte;
 
 #ifdef EXTRACT_C
     int extractfile(fileInfo *);
@@ -212,7 +253,6 @@ typedef struct
     extern int directoryPrint(fileInfo *);
     extern int deleteFile (fileInfo *);
 #endif
-
 
 #ifdef MMAP_C
     int mapFile (fileInfo *);
