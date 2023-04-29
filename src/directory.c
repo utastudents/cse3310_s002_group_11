@@ -89,7 +89,6 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
     }
     // Since we keep reallocating memory, update the original pointer to point to the latest copy
     *file = files;
-    fprintf (stdout, "files[%u].directoryFile = %p\n", 5, files[5].directoryFile);
     return EXIT_SUCCESS;
 }
 

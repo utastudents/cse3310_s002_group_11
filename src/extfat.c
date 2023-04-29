@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <extfat.h>
+
 
 int main(int argc, char ** argv)
 {
@@ -38,6 +38,7 @@ int main(int argc, char ** argv)
         return EXIT_FAILURE;
     }
     if (isTrue(exfat.cflag)) mmapCopy (&exfat); 
+    if(isTrue(exfat.xflag))extractfile(&exfat);
     if (isTrue(exfat.dflag)) directoryPrint(&exfat); // Added from Chris
     if (isTrue(exfat.Dflag)) deleteFile(&exfat);
     unmapFile (&exfat);
