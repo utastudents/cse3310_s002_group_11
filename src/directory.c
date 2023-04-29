@@ -34,7 +34,6 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
     {
         if (isZero(dirEntry[i].raw.data[0])) continue;
         // Decode the data by performing a lot of castings
-        bzero (files[*current_file].directoryFile, 256 * sizeof (unsigned char *));
         switch (dirEntry[i].raw.data[0])
         {
             case 0x81: // Allocation Bitmap
@@ -50,6 +49,7 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
             case 0x85: // File
                 index = 0;
                 *current_file = *file_count - 1;
+                bzero (files[*current_file].directoryFile, 256 * sizeof (unsigned char *));
                 files[*current_file].attributes = &dirEntry[i].raw.file.attributes;
                 files[*current_file].creation = &dirEntry[i].raw.file.create;
                 files[*current_file].modify = &dirEntry[i].raw.file.lastModified;
@@ -89,6 +89,7 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
     }
     // Since we keep reallocating memory, update the original pointer to point to the latest copy
     *file = files;
+    fprintf (stdout, "files[%u].directoryFile = %p\n", 5, files[5].directoryFile);
     return EXIT_SUCCESS;
 }
 
@@ -171,11 +172,8 @@ int deleteFile (fileInfo * inst)
             unsigned char j = 0;
             while (true)
             {
-//            directoryFile values are being cleared for unknown reason
-//            fprintf (stdout, "Clearing bit at %p\n", files[i].directoryFile[j++]);
-//            (files[i].directoryFile[j++])[0] &= 0x7F; // Unset the occupied bit
-            if (files[i].directoryFile[j] == NULL) break;
-            } // Walk the array
+            (files[i].directoryFile[j++])[0] &= 0x7F; // Unset the occupied bit
+            }
             unsigned char * bitmap = inst->Data + getFirstCluster(inst) + getClusterSize(inst) * (inst->allocationBitmap - 2);
             CurrentCluster = files[i].cluster;
             while (true)
