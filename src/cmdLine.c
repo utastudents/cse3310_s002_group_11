@@ -18,7 +18,6 @@ int initInstance (fileInfo * inst)
     inst->cflag = false;
     inst->vflag = false;
     inst->dflag = false; // Added from Chris
-    inst->xflag = false;
     inst->Dflag = false;
     inst->fd = -1;
     inst->fdOutput = -1;
@@ -46,14 +45,13 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
         "           -o xxx    where xxx is the output file number [This is optional, inputFile will be used if not specified]",
         "           -c        copy input ",
         "           -d        directory listing",// Added from Chris
-        "           -D        delete file",// Added from Chris
-        "           -x xxx    where xxx is the file to be extracted"
+        "           -D        delete file",
         "           -v        verify exfat image", // Added from Rency
         "           -h        is this help message",
         NULL
     };    
     int i = 0;
-    while ((inst->opt = getopt (argc, argv, "i:co:x:hdD:v")) != -1)
+    while ((inst->opt = getopt (argc, argv, "i:co:hdD:fmv")) != -1)
     {
         switch (inst->opt)
         {
@@ -68,16 +66,12 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
                 inst->oflag = true;
                 inst->ovalue = optarg;
                 break;
-            case 'x':
-                inst->xflag = true;
-                inst->xvalue = optarg;
-                break;
             case 'D':
                 inst->Dflag = true;
                 inst->Dvalue = optarg;
                 break;
             case ':':
-                if (optopt == 'i' || optopt == 'o'|| optopt == 'x' )
+                if (optopt == 'i' || optopt == 'o')
                 fprintf (stderr, "Option requires an argument.\n");
                 return EXIT_FAILURE;
             case 'd': // Added from Chris
