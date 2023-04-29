@@ -87,21 +87,19 @@ typedef struct
     void * Data; //void * memInput
     void * memOutput;
     char * filename; //char * ivalue
-    char * ovalue;
-    char * xvalue;
-    char * Dvalue;
+    char * ovalue; // Output file name value
+    char * Dvalue; // Delete file name value
     int fd; //int fdInput
     int fdOutput;
     int SectorSize;
     int FileLength;
-    bool iflag;
-    bool oflag;
-    bool cflag;
-    bool vflag; 
-    bool xflag;
-    bool dflag;
-    bool Dflag;
-    int opt;
+    bool iflag; // Input command line option specified
+    bool oflag; // Output command line option specified
+    bool cflag; // Copy command line option specified
+    bool vflag; // Verify command line option specified
+    bool dflag; // Directory listing command line option specified
+    bool Dflag; // Delete command line option specifed
+    int opt; 
     struct stat inFile; 
     struct stat outFile;
     const char * function;
@@ -238,13 +236,6 @@ typedef struct
     unsigned char b7:1;
 } binaryByte;
 
-#ifdef EXTRACT_C
-    int extractfile(fileInfo *);
-    extern int decode_cluster(void *, unsigned int , exfile **, unsigned int *, unsigned int *);
-#else
-    extern int extractfile(fileInfo *);
-   
-#endif
 
 #ifdef DIRECTORY_C
     int directoryPrint(fileInfo *);
@@ -253,6 +244,7 @@ typedef struct
     extern int directoryPrint(fileInfo *);
     extern int deleteFile (fileInfo *);
 #endif
+
 
 #ifdef MMAP_C
     int mapFile (fileInfo *);

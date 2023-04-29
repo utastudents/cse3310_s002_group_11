@@ -18,9 +18,6 @@
     ],
     "files.associations": {
         "types.h": "c",
-        "stat.h": "c",
-        "string_view": "c",
-        "stdlib.h": "c"
-    },
-    "C_Cpp.errorSquiggles": "disabled"
+        "stat.h": "c"
+    }
 }
