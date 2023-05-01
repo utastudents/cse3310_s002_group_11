@@ -17,7 +17,6 @@
 
 static MunitResult test_init(const MunitParameter params[], void* data)
 {
-  #define CMDLINE_C
   (void) params;
   (void) data;
 
@@ -32,18 +31,21 @@ static MunitResult test_init(const MunitParameter params[], void* data)
   return MUNIT_OK;
 }
 
-static MunitResult test_verify(const MunitParameter params[], void* data)
+static MunitResult test_fill_instance(const MunitParameter params[], void* data)
 {
   (void) params;
   (void) data;
+
+  char* argv[] = {"extfat", "-i", "test.image", "-o", "output", "-c", NULL};
+  int argc = sizeof(argv) / sizeof(char*) - 1;
 
   fileInfo inst;
 
   setFunction ((&inst));
 
-  int result = verifyExfat(&inst);
+  int result = fillInstance(&inst, argc, argv);
 
-  munit_assert(result == EXIT_FAILURE);
+  munit_assert(result == EXIT_SUCCESS);
 
   return MUNIT_OK;
 }
@@ -53,21 +55,29 @@ static MunitResult test_compare(const MunitParameter params[], void* data)
   (void) params;
   (void) data;
 
+  char* argv[] = {"extfat", "-i", "test.image", "-o", "output", "-c", NULL};
+  int argc = sizeof(argv) / sizeof(char*) - 1;
+
   fileInfo inst;
 
   setFunction ((&inst));
 
-  int result = mapFile(&inst);
+  fillInstance(&inst, argc, argv);
 
-  munit_assert(result == EXIT_FAILURE);
+  int result = compareBootSec(&inst);
+
+  munit_assert(result == EXIT_SUCCESS);
 
   return MUNIT_OK;
 }
 
-static MunitResult test_dir_print(const MunitParameter params[], void* data)
+static MunitResult test_mmap_copy(const MunitParameter params[], void* data)
 {
   (void) params;
   (void) data;
+
+  char* argv[] = {"extfat", "-i", "test.image", "-o", "output", "-c", NULL};
+  int argc = sizeof(argv) / sizeof(char*) - 1;
 
   fileInfo inst;
 
@@ -75,7 +85,11 @@ static MunitResult test_dir_print(const MunitParameter params[], void* data)
 
   initInstance(&inst);
 
-  int result = deleteFile(&inst);
+  setFunction ((&inst));
+
+  fillInstance(&inst, argc, argv);
+
+  int result = mmapCopy(&inst);
 
   munit_assert(result == EXIT_SUCCESS);
 
@@ -101,9 +115,9 @@ static MunitResult test_unmap_file(const MunitParameter params[], void* data)
 
 static MunitTest test_suite_tests[] = {
   { (char*) "/example/init", test_init, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}, 
-  { (char*) "/example/verify", test_verify, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}, 
+  { (char*) "/example/fill_instance", test_fill_instance, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}, 
   { (char*) "/example/compare", test_compare, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}, 
-  { (char*) "/example/dir_print", test_dir_print, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}, 
+  { (char*) "/example/mmap_copy", test_mmap_copy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}, 
   { (char*) "/example/unmap_file", test_unmap_file, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}, 
   { NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL }
 };
