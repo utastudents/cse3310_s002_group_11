@@ -29,7 +29,7 @@ unit_tests: munit_example
 
 # this test needs to be deleted once we get some real tests
 # for the problem at hand
-munit_example:unit_tests/munit/example.c
+munit_example:unit_tests/munit/example.c src/verify.c src/cmdLine.c src/mmap.c src/directory.c common/routines.c
 	${CC} ${CPPFLAGS}  unit_tests/munit/munit.c -I./unit_tests/munit/ ${CPPINCS} -o $@ $^
 
 # requirements tests
@@ -51,7 +51,7 @@ crc_example:examples/crc_example.c
 tests: run_unit_tests run_tests
 
 run_unit_tests: munit_example
-	./munit_example
+	./munit_example 
 
 run_tests:
 	echo "here i would be running the requirements tests"
