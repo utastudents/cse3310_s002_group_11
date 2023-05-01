@@ -173,18 +173,20 @@ int deleteFile (fileInfo * inst)
             {
                 unsigned char * ptr = files[i].directoryFile[j];
                 if (isNull(ptr)) break;
-                printf ("ptr = files[%u].directoryFile[%u] [%p]\n", i, j, files[i].directoryFile[j]);
                 j++; 
                 ptr[0] &= 0x7F; // Unset the occupied bit
             }
             unsigned char * bitmap = inst->Data + getFirstCluster(inst) + getClusterSize(inst) * (inst->allocationBitmap - 2);
-            printf ("inst->allocationBitmap = %u\n", inst->allocationBitmap);
-            CurrentCluster = files[i].cluster;
+            fprintf (stdout, "inst->allocationBitmap = %u [%p]\n", inst->allocationBitmap, bitmap);
+            fprintf (stdout, "files[%u].cluster = %u\n", i, files[i].cluster);
+            CurrentCluster = files[i].cluster - 2;
             while (true)
             {
+                fprintf (stdout, "CurrentCluster = %u\n", CurrentCluster);
                 bitmap[CurrentCluster / 8] &= ~(1 << (CurrentCluster % 8)); // Unset the bitmap entries
                 CurrentCluster = fatMain[CurrentCluster];
                 if (CurrentCluster == (u_int32_t)(-1)) break;
+                CurrentCluster -= 2;
             }
             break;
        } 
