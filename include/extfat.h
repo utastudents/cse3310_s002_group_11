@@ -24,6 +24,7 @@ extern int ftruncate64 (int, __off64_t); // I shouldn't have to do this for a gl
 #define getClusterSize(x) ((1 << x->M_Boot->BytesPerSectorShift) * (1 << x->M_Boot->SectorsPerClusterShift))
 #define getFirstCluster(x) ((1 << x->M_Boot->BytesPerSectorShift) * x->M_Boot->ClusterHeapOffset)
 #define getFATStart(x) (void *)(x->Data + (1 << x->M_Boot->BytesPerSectorShift) * x->M_Boot->FatOffset)
+#define getAllocationTableOffset(x) (getFirstCluster(x) + getClusterSize(x) * (x->allocationBitmap - 2))
 
 // Inline version of:
 // void compareMemory(bool u, fileInfo * v, fileInfo * w, [fileInfo member, doesn't translate] x, int y, char * z)
@@ -175,7 +176,9 @@ typedef struct
 typedef struct 
 {   
     unsigned char entryType;
-    unsigned char secondaryCount;
+    unsigned char allocationPossible:1;
+    unsigned char noFatChain:1;
+    unsigned char customDefined:6;
     unsigned char reserved1;
     unsigned char nameLength;
     unsigned short int nameHash;
@@ -224,6 +227,8 @@ typedef struct
     unsigned char createDeciSeconds;
     unsigned long int length;
     void * directoryFile[256]; // Pointers to the start of all associated directory entries used to build this
+    bool allocationPossible;
+    bool noFatChain;
 } exfile;
 
 typedef struct
@@ -241,6 +246,7 @@ typedef struct
 #ifdef EXTRACT_C
     int extractfile(fileInfo *);
     extern int decode_cluster(void *, unsigned int , exfile **, unsigned int *, unsigned int *, fileInfo *);
+    extern unsigned int nextCluster (unsigned int *, unsigned int, bool, bool);
 #else
     extern int extractfile(fileInfo *);
    
@@ -249,6 +255,8 @@ typedef struct
 #ifdef DIRECTORY_C
     int directoryPrint(fileInfo *);
     int deleteFile (fileInfo *);
+    int decode_cluster(void *, unsigned int , exfile **, unsigned int *, unsigned int *, fileInfo *);
+    unsigned int nextCluster (unsigned int *, unsigned int, bool, bool);
 #else
     extern int directoryPrint(fileInfo *);
     extern int deleteFile (fileInfo *);

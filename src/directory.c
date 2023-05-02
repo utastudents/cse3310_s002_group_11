@@ -76,6 +76,8 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
                 files[*current_file].length = dirEntry[i].raw.stream.dataLength;
                 files[*current_file].nameHash = dirEntry[i].raw.stream.nameHash;
                 files[*current_file].directoryFile[index] = dirEntry[i].raw.data;
+                files[*current_file].allocationPossible = dirEntry[i].raw.stream.allocationPossible;
+                files[*current_file].noFatChain = dirEntry[i].raw.stream.noFatChain;
                 break;
 
             case 0xC1: // File Name
@@ -93,13 +95,36 @@ int decode_cluster (void * memBase, unsigned int Cluster, exfile ** file, unsign
 }
 
 /*
-* Print the root directory structure
-* int directoryPrint (struct instance * inst)
-* Returns EXIT_SUCCESS if no errors encountered
-* Returns EXIT_FAILURE and prints appropriate error
-* Options
-* inst [struct instance *] - Pointer to the main memory for the instance
-*/
+ * Fetch Next Cluster
+ * unsigned int nextCluster (unsigned int * fatTable, unsigned int currentCluster, bool allocationPossible, bool noFatChain)
+ * Returns the next cluster in the stream
+ * Options
+ * fatTable [unsigned int *] - Pointer to the Fat Table
+ * currentCluster [unsigned int] - Current cluster we are on
+ * allocationPossible [bool] - Flag
+ * noFatChain [bool] - Flag
+ */
+
+unsigned int nextCluster (unsigned int * fatTable, unsigned int currentCluster, bool allocationPossible, bool noFatChain)
+{
+    if (isFalse(allocationPossible) && isFalse(noFatChain)) return 0;
+    if (isTrue(allocationPossible) && isZero(currentCluster)) return 0;
+    if (isTrue(noFatChain))
+    {
+        return currentCluster + 1;
+    } else { // Use Fat Table
+        return fatTable[currentCluster];
+    }
+}
+
+/*
+ * Print the root directory structure
+ * int directoryPrint (struct instance * inst)
+ * Returns EXIT_SUCCESS if no errors encountered
+ * Returns EXIT_FAILURE and prints appropriate error
+ * Options
+ * inst [struct instance *] - Pointer to the main memory for the instance
+ */
 
 int directoryPrint (fileInfo * inst)
 {
@@ -113,9 +138,13 @@ int directoryPrint (fileInfo * inst)
     files = calloc (1, sizeof (exfile));
     while (true)
     {
+        fprintf (stdout, "Decoding Cluster %u\n", CurrentCluster);
         decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * CurrentCluster), Cluster, &files, &file_count, &current_file, inst);           
-        CurrentCluster = fatMain[CurrentCluster];
+        CurrentCluster = nextCluster (fatMain, CurrentCluster, false, false); // Root directory always uses FAT table
+        fprintf (stdout, "Next Cluster %u\n", CurrentCluster);
         if (CurrentCluster == (u_int32_t)(-1)) break;
+        if (isZero(CurrentCluster)) break;
+        CurrentCluster -= 2;
     }
     fprintf (stdout, "Entries Found in Root Directory: %u\n", file_count - 1);
     for (unsigned int i = 0; i < (file_count - 1); i++)
@@ -148,45 +177,48 @@ int directoryPrint (fileInfo * inst)
 
 int deleteFile (fileInfo * inst)
 {
-    u_int32_t * fatMain;
+    u_int32_t * fatMain = NULL;
     bool found = false;
+    unsigned char * bitmap = NULL, * ptr = NULL, i = 0, j = 0;
     unsigned int Cluster = getClusterSize(inst);
     unsigned int FirstClusterOffset = getFirstCluster(inst);
     unsigned int CurrentCluster = inst->M_Boot->FirstClusterOfRootDirectory - 2, file_count = 1, current_file = 0;
     exfile * files;
-    fatMain = getFATStart (inst);
     files = calloc (1, sizeof (exfile));
+    fatMain = getFATStart (inst);
     while (true)
     {
         decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * CurrentCluster), Cluster, &files, &file_count, &current_file, inst);           
-        CurrentCluster = fatMain[CurrentCluster];
+        CurrentCluster = nextCluster (fatMain, CurrentCluster, false, false); // Root directory always uses FAT table
         if (CurrentCluster == (u_int32_t)(-1)) break;
+        if (isZero(CurrentCluster)) break;
+        CurrentCluster -= 2;
     }
-    for (unsigned int i = 0; i < file_count - 1; i++)
+    for (i = 0; i < file_count - 1; i++)
     {
         if (isZero(strcmp(files[i].filename,inst->Dvalue))) // Scan until we find the file
         {
             fprintf (stdout, "Deleting %s\n", files[i].filename);
             found = true; // Set flag if we found something
-            unsigned char j = 0;
+            j = 0;
+            bitmap = inst->Data + getAllocationTableOffset (inst);
             while (true)
             {
-                unsigned char * ptr = files[i].directoryFile[j];
+                ptr = files[i].directoryFile[j++];
                 if (isNull(ptr)) break;
-                j++; 
                 ptr[0] &= 0x7F; // Unset the occupied bit
             }
-            unsigned char * bitmap = inst->Data + getFirstCluster(inst) + getClusterSize(inst) * (inst->allocationBitmap - 2);
-            fprintf (stdout, "inst->allocationBitmap = %u [%p]\n", inst->allocationBitmap, bitmap);
-            fprintf (stdout, "files[%u].cluster = %u\n", i, files[i].cluster);
             CurrentCluster = files[i].cluster - 2;
+            fatMain = getFATStart (inst);
             while (true)
             {
-                fprintf (stdout, "CurrentCluster = %u\n", CurrentCluster);
                 bitmap[CurrentCluster / 8] &= ~(1 << (CurrentCluster % 8)); // Unset the bitmap entries
-                CurrentCluster = fatMain[CurrentCluster];
+                if (files[i].length < Cluster) break;
+                CurrentCluster = nextCluster (fatMain, CurrentCluster, files[i].allocationPossible, files[i].noFatChain);
                 if (CurrentCluster == (u_int32_t)(-1)) break;
-                CurrentCluster -= 2;
+                if (isZero(CurrentCluster)) break;
+                if (isFalse(files[i].noFatChain)) CurrentCluster -= 2;
+                files[i].length -= Cluster;
             }
             break;
        } 
