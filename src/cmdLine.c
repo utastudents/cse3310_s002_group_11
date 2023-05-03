@@ -32,6 +32,7 @@ int initInstance (fileInfo * inst)
     bzero (&(inst->outFile), sizeof (struct stat));
     inst->Data = NULL;
     inst->memOutput = NULL;
+    inst->allocationBitmap = 0;
     return EXIT_SUCCESS;
 }
 
@@ -52,7 +53,7 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
         NULL
     };    
     int i = 0;
-    while ((inst->opt = getopt (argc, argv, "i:co:x:hdD:fmv")) != -1)
+    while ((inst->opt = getopt (argc, argv, "i:co:x:hdD:v")) != -1)
     {
         switch (inst->opt)
         {
@@ -96,7 +97,5 @@ int fillInstance (fileInfo * inst, int argc, char ** argv)
     }
     if (isFalse(inst->iflag)) inst->filename = "test.image";
     if (isFalse(inst->oflag)) inst->ovalue = inst->filename;
-   
-
     return EXIT_SUCCESS;
 }

@@ -27,7 +27,7 @@ int mapFile (fileInfo * inst)
         return EXIT_FAILURE;
     }
     fstat (inst->fd, &(inst->inFile));
-    inst->Data = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, inst->fd, 0);
+    inst->Data = mmap (NULL, inst->inFile.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, inst->fd, 0);
     if (inst->Data == MAP_FAILED)
     {
         printf ("%s: Cannot map input file to memory - %s\n", inst->function, strerror(errno));
@@ -91,7 +91,8 @@ int unmapFile (fileInfo * inst)
     setFunction (inst);
     msync (inst->Data, inst->inFile.st_size, MS_SYNC); 
     munmap (inst->Data, inst->inFile.st_size); 
-    close (inst->fd); 
+    close (inst->fd);
+    if (inst->cflag != 1) return EXIT_SUCCESS;
     msync (inst->memOutput, inst->inFile.st_size, MS_SYNC); 
     munmap (inst->memOutput, inst->inFile.st_size); 
     close (inst->fdOutput); 
