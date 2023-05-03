@@ -27,8 +27,10 @@ int extractfile (fileInfo * inst)
     while (true)
     {
         decode_cluster ((void *)(inst->Data + FirstClusterOffset + Cluster * CurrentCluster), Cluster, &files, &file_count, &current_file, inst);           
-        CurrentCluster = fatMain[CurrentCluster];
+        CurrentCluster = nextCluster (fatMain, CurrentCluster, false, false); // Root directory always uses FAT table
         if (CurrentCluster == (u_int32_t)(-1)) break;
+        if (isZero(CurrentCluster)) break;
+        CurrentCluster -= 2;
     }
    
    
@@ -39,35 +41,22 @@ int extractfile (fileInfo * inst)
         {
             FILE *fp;
             fp=fopen(inst->ovalue,"w+");
-             if (fp == NULL)
+            if (fp == NULL) perror("fopen");
+            CurrentCluster = files[i].cluster - 2;
+            do
             {
-              perror("fopen");
-            }
-        
-            do{
-
-              CurrentCluster=files[i].cluster;
-              fwrite((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)),(files[i].length>Cluster)?Cluster:files[i].length,1,fp);
-              if(files[i].length<=Cluster)
-              {
-                files[i].length=0;
-              }
-              if(files[i].length>Cluster)
-              {
-                files[i].length-=Cluster;
-                files[i].cluster=fatMain[CurrentCluster];
-
-              }
-            }while(files[i].length>0);
-            
+                fwrite((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)),(files[i].length>Cluster)?Cluster:files[i].length,1,fp);
+                CurrentCluster = nextCluster (fatMain, CurrentCluster, files[i].allocationPossible, files[i].noFatChain);
+                if (CurrentCluster == (u_int32_t)(-1)) break;
+                if (isZero(CurrentCluster)) break;
+                if (isFalse(files[i].noFatChain)) CurrentCluster -= 2;
+                if (files[i].length <= Cluster) break;
+                if(files[i].length>Cluster) files[i].length -= Cluster;
+            } while(files[i].length>0);
             fclose(fp);
         }
-
     }
-
-
     free (files);
-
     return EXIT_SUCCESS;
 
 }
