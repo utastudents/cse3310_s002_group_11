@@ -34,8 +34,8 @@ munit_example:unit_tests/munit/example.c src/verify.c src/cmdLine.c src/mmap.c s
 
 # requirements tests
 
-system_tests: tests/system_tests.bash
-	./system_tests
+system_tests:tests/system_tests.bash
+	bash tests/system_tests.bash
 
 # example code
 mmap:examples/mmap.c  
@@ -53,8 +53,7 @@ tests: run_unit_tests run_tests
 run_unit_tests: munit_example
 	./munit_example 
 
-run_tests:
-	echo "here i would be running the requirements tests"
+run_tests: system_tests
 
 clean:
 	-rm -f mmap fread munit_example extfat crc_example
