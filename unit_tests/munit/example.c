@@ -36,14 +36,22 @@ static MunitResult test_fill_instance(const MunitParameter params[], void* data)
   (void) params;
   (void) data;
 
-  char* argv[] = {"extfat", "-i", "test.image", "-o", "output", "-c", NULL};
+  char * fileName = malloc(256);
+  memset(fileName, ' ', 255);
+  fileName[255] = '\0';
+
+  char* argv[] = {"extfat", "-i", "test.image", "-o", "output", "-c", fileName};
   int argc = sizeof(argv) / sizeof(char*) - 1;
 
   fileInfo inst;
 
   setFunction ((&inst));
 
+  argv[4] = fileName;
+
   int result = fillInstance(&inst, argc, argv);
+
+  free(fileName);
 
   munit_assert(result == EXIT_SUCCESS);
 
