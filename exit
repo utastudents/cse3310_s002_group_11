@@ -1,0 +1,339 @@
+[33mcommit 0cca48a268bed84114ac7267f91d11a8050b2b3a[m[33m ([m[1;36mHEAD -> [m[1;32mPhu-3[m[33m, [m[1;31morigin/Phu-3[m[33m)[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Wed May 3 00:51:39 2023 +0000
+
+    Updated unit tests
+
+[33mcommit b82b2baac8c43c611f136005f1032801f3e935d0[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Mon May 1 05:34:26 2023 +0000
+
+    Tar file
+
+[33mcommit d4b580cdbbe2bcfd689b5a29eadb1d72c0336a94[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Mon May 1 05:15:20 2023 +0000
+
+    Task 3
+
+[33mcommit fd60deac504eb897da7c15aebb637626d210683a[m
+Merge: 446f4cc b016884
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Mon May 1 04:53:49 2023 +0000
+
+    Merge remote-tracking branch 'origin/main' into Phu-3
+    Updated functions
+
+[33mcommit 446f4cc977b368f66de9bed212b84d86f876698f[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Mon May 1 04:46:22 2023 +0000
+
+    Updated Makefile & Example.c
+
+[33mcommit b0168840f177e99926ac651892800e892b33467f[m
+Merge: adc6219 0486b82
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Sat Apr 29 09:17:52 2023 -0500
+
+    Merge pull request #6 from utastudents/Rency-3
+    
+    Rency 3
+
+[33mcommit 0486b82f07da54cb2a3dd84ca4aaa8c0503029c3[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Mon Apr 24 02:17:33 2023 +0000
+
+            modified:   src/directory.c
+            modified:   src/extract.c
+
+[33mcommit e154d47611c2449a87f8bcba639dd1c6c96a99e6[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Sat Apr 22 15:15:29 2023 +0000
+
+            modified:   .vscode/settings.json
+            modified:   README.md
+            modified:   include/extfat.h
+            modified:   src/cmdLine.c
+            modified:   src/directory.c
+            modified:   src/extfat.c
+            modified:   src/extract.c
+            new file:   test1.c
+            new file:   test2.c
+
+[33mcommit 38cf77034430e1a00d1444c33a8bb52dd43acb95[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Wed Apr 19 15:52:01 2023 +0000
+
+            modified:   .vscode/settings.json
+            modified:   Makefile
+            deleted:    cse3310_s002_group_11.tar
+            deleted:    cse3310_s002_group_11.tar.gz
+            modified:   include/extfat.h
+        modified:   munit_example
+            modified:   src/cmdLine.c
+            modified:   src/directory.c
+            modified:   src/extfat.c
+            new file:   src/extract.c
+            new file:   test.c
+
+[33mcommit adc621913e410c496689f27dd293b2c9703afd06[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Mon Apr 10 22:12:22 2023 +0000
+
+    Group Iteration 2 Tar file
+
+[33mcommit 2ffb9d4ecfda9e3d628381eb17efd944480d4ffc[m
+Merge: 4a5fbf4 a624901
+Author: joshuatbngo <123345351+joshuatbngo@users.noreply.github.com>
+Date:   Mon Apr 10 12:11:35 2023 -0500
+
+    Merge pull request #5 from utastudents/Joshua-2
+    
+    pull request
+
+[33mcommit a624901c2b7e697be8462113f09f57dcf7ea91c8[m[33m ([m[1;31morigin/Joshua-2[m[33m)[m
+Author: joshuatbngo <123345351+joshuatbngo@users.noreply.github.com>
+Date:   Fri Apr 7 05:01:27 2023 +0000
+
+    commit
+
+[33mcommit 4a5fbf4d290b22ebd0dc72515d37a61a5908135c[m
+Merge: a4b2e94 20c10ac
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Thu Apr 6 22:30:00 2023 -0500
+
+    Merge pull request #4 from utastudents/Phu-2
+    
+    Task 2
+
+[33mcommit 20c10ac37b8d6ca4b8e64dcc827bdeef6ec7a484[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Fri Apr 7 03:29:24 2023 +0000
+
+    Task 2
+
+[33mcommit a4b2e94e1725c6c7c20a7d29dd97a6c43a55e175[m
+Merge: 7e519d0 9bfeda3
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Thu Apr 6 21:43:33 2023 -0500
+
+    Merge pull request #3 from utastudents/Phu-2
+    
+    Phu 2
+
+[33mcommit 9bfeda3992d304c164dd70354c6ad02c05f56d15[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Fri Apr 7 02:31:23 2023 +0000
+
+    Task 2
+
+[33mcommit 7e519d07603a8e4790ee4eab3d8e2df6b485aab2[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Thu Apr 6 21:55:37 2023 +0000
+
+            modified:   README.md
+
+[33mcommit 646ec442bfd3fd74a086b4554ab23b0286dacd47[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Thu Apr 6 21:53:12 2023 +0000
+
+            modified:   Makefile
+            modified:   README.md
+            modified:   include/extfat.h
+            modified:   src/cmdLine.c
+            new file:   src/directory.c
+            modified:   src/extfat.c
+
+[33mcommit 44077abd3446d172708cee905d68dc8d0b15ef02[m
+Merge: 220eebd 2525ec1
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Thu Apr 6 15:44:54 2023 -0500
+
+    Merge pull request #2 from utastudents/Rency-2
+    
+    Rency 2
+
+[33mcommit 2525ec151f0624614282e5fbeea2f8cd96c8d38f[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Thu Apr 6 20:18:11 2023 +0000
+
+            new file:   munit_example
+            modified:   src/cmdLine.c
+            modified:   src/verify.c
+
+[33mcommit f830cc574c2ddb7306cee2b5c7c4d6a3eb1ae1bc[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Mon Apr 3 00:19:28 2023 +0000
+
+            modified:   src/cmdLine.c
+            modified:   src/extfat.c
+            modified:   src/mmap.c
+
+[33mcommit 4e52c2a664bc487d228b022468d2cf2edb75a692[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Mon Apr 3 00:17:13 2023 +0000
+
+    Task 2 Commmit 1
+
+[33mcommit 7f4cea9c965001aa39808348b4fd0d2019cb0f68[m
+Author: uta-rxk4931 <123216794+uta-rxk4931@users.noreply.github.com>
+Date:   Mon Mar 27 21:34:27 2023 +0000
+
+            modified:   include/extfat.h
+            modified:   src/cmdLine.c
+            modified:   src/extfat.c
+            modified:   src/mmap.c
+            modified:   src/verify.c
+
+[33mcommit 220eebdb1d201775c98074d074f1cfa63f26d37f[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Mon Feb 27 13:58:49 2023 +0000
+
+    Updated tarball and other changes
+
+[33mcommit ed005587e65c51bf90cee92ac6655b1d5a16bd07[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Mon Feb 27 13:53:37 2023 +0000
+
+    Seperating Out Functions
+
+[33mcommit 89ad9a5e8d3557927b3b71d0ada1e87cda3bf19d[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Sat Feb 25 04:44:24 2023 +0000
+
+    Final version
+
+[33mcommit 57e9e9a94d819615f343a1b4f500fffa0f65a2e0[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 17:21:29 2023 +0000
+
+    Tarball and cleanup
+
+[33mcommit 0acef69739969d8cf88e433e83fdfce60b7af0cb[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 11:04:36 2023 +0000
+
+    First pass complete
+
+[33mcommit f8174ddce746c15d0c72f18957f7d53b3f3b140d[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 10:44:47 2023 +0000
+
+    Clean up verification code
+
+[33mcommit 41a42ad727d1dc01bfdf0df06acd13175ae007f2[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 10:10:30 2023 +0000
+
+    Copy code finished
+
+[33mcommit a7fa2d55609516f64632235b3cf0ebfc76031e64[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 09:57:27 2023 +0000
+
+    Debug mmap
+
+[33mcommit 94bf18770b52e185e14a8d6b37ee5b8d41dd7d49[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 09:55:55 2023 +0000
+
+    Debug mmap
+
+[33mcommit 87b55c22893f5b12ef28129808c635b5981d3aea[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 09:05:45 2023 +0000
+
+    Debug munmap call
+
+[33mcommit b03733a34c9fd9e5da3519ec1f5ac4009833942f[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 02:57:39 2023 +0000
+
+    Grammer Correction
+
+[33mcommit 4818622e3c4b2a103ea3cc3b8f35256526c08907[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 02:51:53 2023 +0000
+
+    First Stage Debug Complete
+
+[33mcommit ec07e196c834c7d655c6ef35d21a454860af10ed[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 01:58:07 2023 +0000
+
+    Initial Complete Version for iteration 1
+
+[33mcommit e2be7f9779b892f8322821f84bec585278cd54dd[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 00:53:10 2023 +0000
+
+    Basic Sanity Checks Complete
+
+[33mcommit c114af048347dcb0e2e69deeb384c52d65a9f5c8[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 23 00:46:04 2023 +0000
+
+    Sanity Checks Update
+
+[33mcommit a71334d8531342a11f97c70f60e5fbb4d425484e[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Tue Feb 21 12:19:55 2023 +0000
+
+    Sanity Checks Adding
+
+[33mcommit afe827a52fd947abb42bc4104a51d567b8356597[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Tue Feb 21 00:16:41 2023 +0000
+
+    Commit with Rency
+
+[33mcommit c150daa5ae08fabb5207fd7dca66e7944b2c9c05[m
+Merge: dd47639 771d4c0
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Mon Feb 20 16:52:52 2023 -0600
+
+    Merge pull request #1 from utastudents/Chris
+    
+    Initial Merge
+
+[33mcommit 771d4c0a124e92104a9669e0fb9fcea390c19e83[m[33m ([m[1;31morigin/Chris[m[33m)[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Sun Feb 19 19:40:26 2023 +0000
+
+    Commit 5
+
+[33mcommit e8df6e94bd8ff45c796f485bf7db95619ef13511[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Sat Feb 18 17:00:27 2023 +0000
+
+    70% complete for all tasks
+
+[33mcommit f8ad9ee78ee44ca7eebc72fc19e1f70b390a433d[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Sat Feb 18 14:46:21 2023 +0000
+
+    Commit 4
+
+[33mcommit 2acfa4f872d19e594fda02309ffdc459c6d8c4ab[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Thu Feb 16 00:12:24 2023 +0000
+
+    Third commit
+
+[33mcommit ce615bee39f5610a134b41d576a10e08d95e01e7[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Mon Feb 13 18:10:15 2023 +0000
+
+    Second commit
+
+[33mcommit 9fdc1746b540e958c5eda1be0cf2d1daeab5fc2d[m
+Author: Christopher Worley <123421172+cgw8000@users.noreply.github.com>
+Date:   Sun Feb 12 15:48:12 2023 +0000
+
+    Initial layout
+
+[33mcommit dd4763948af317c05cd0ac44753c7649e9e6f6ac[m
+Author: pht23 <98304090+pht23@users.noreply.github.com>
+Date:   Mon Feb 6 18:02:43 2023 -0600
+
+    Initial commit
