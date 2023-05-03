@@ -1,6 +1,10 @@
 #!/bin/bash
 echo "Test to check if input file matches output file"
 
+if [ -f test2.image ]; then
+    rm test2.image
+fi
+
 # Note, not implemented at this time..just a cut and paste...
 
 result1=($(/usr/bin/md5sum test.image))
@@ -9,7 +13,6 @@ result1=($(/usr/bin/md5sum test.image))
 
 ./extfat -c -i test.image -o test2.image
 
-$(cp test.image test2.image)
  
 result2=($(/usr/bin/md5sum test2.image))
 
