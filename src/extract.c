@@ -45,7 +45,7 @@ int extractfile (fileInfo * inst)
             CurrentCluster = files[i].cluster - 2;
             do
             {
-                fwrite((void *)(inst->Data + FirstClusterOffset + Cluster * (CurrentCluster - 2)),(files[i].length>Cluster)?Cluster:files[i].length,1,fp);
+                fwrite((void *)(inst->Data + FirstClusterOffset + Cluster * CurrentCluster),(files[i].length>Cluster)?Cluster:files[i].length,1,fp);
                 CurrentCluster = nextCluster (fatMain, CurrentCluster, files[i].allocationPossible, files[i].noFatChain);
                 if (CurrentCluster == (u_int32_t)(-1)) break;
                 if (isZero(CurrentCluster)) break;
